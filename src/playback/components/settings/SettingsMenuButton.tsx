@@ -1,21 +1,20 @@
 import React from "react";
 import { LucideIcon } from "lucide-react";
 
-interface SettingsMenuButtonProps {
+interface SettingsMenuButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
   isOpen: boolean;
-  onClick?: () => void;
   title: string;
 }
 
 export const SettingsMenuButton = React.forwardRef<
   HTMLButtonElement,
   SettingsMenuButtonProps
->(({ icon: Icon, isOpen, onClick, title }, ref) => {
+>(({ icon: Icon, isOpen, title, ...props }, ref) => {
   return (
     <button
       ref={ref}
-      onClick={onClick}
+      {...props}
       className="glass-button rounded-full w-10 h-10 flex items-center justify-center border border-white/10 transition-all duration-300 backdrop-blur-sm"
       style={{
         background: isOpen
