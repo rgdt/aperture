@@ -67,33 +67,30 @@ jobs:
           ref: ${{ needs.prepare.outputs.commit_sha }}
           fetch-depth: 0
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        run: |
+          docker build -t aperture-web:${VERSION} .
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" |
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Build & Push Multi-Architecture Docker Images
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${{ env.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:latest
+      - name: Tag and push docker images
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          # Tag for Docker Hub
+          docker tag aperture-web:${VERSION} ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION}
+          docker tag aperture-web:${VERSION} ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:latest
+
+          # Push
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:latest
 
       - name: Save image artifact (optional - keep your current)
         run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION}
           mkdir -p build
-          docker save ${{ secrets.DOCKERHUB_USERNAME }}/aperture-web:${VERSION} | gzip > "build/aperture-web-${VERSION}.tar.gz"
+          docker save aperture-web:${VERSION} | gzip > "build/aperture-web-${VERSION}.tar.gz"
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
