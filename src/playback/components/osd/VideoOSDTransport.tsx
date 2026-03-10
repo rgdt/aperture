@@ -25,7 +25,15 @@ interface VideoOSDTransportProps {
   muted: boolean;
   volume: number;
   isFullscreen: boolean;
+  hasNextEpisode: boolean;
+  hasPreviousEpisode: boolean;
+  showEpisodeNavigation: boolean;
   toggleFullscreen: () => void;
+  onNextEpisode: () => void;
+  onPreviousEpisode: () => void;
+  onSeekBack: () => void;
+  onSeekForward: () => void;
+  onPlayPause: () => void;
 }
 
 export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
@@ -37,47 +45,38 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
   volume,
   isFullscreen,
   toggleFullscreen,
+  hasNextEpisode,
+  hasPreviousEpisode,
+  onNextEpisode,
+  onPreviousEpisode,
+  showEpisodeNavigation,
+  onSeekBack,
+  onSeekForward,
+  onPlayPause,
 }) => {
-  function handleSeekBack() {
-    manager.seek(Math.max(0, currentTime - 10) * 10000000);
-  }
-
-  function handleSeekForward() {
-    manager.seek(Math.min(duration, currentTime + 10) * 10000000);
-  }
-
-  function handlePlayPause() {
-    if (paused) {
-      manager.unpause();
-    } else {
-      manager.pause();
-    }
-  }
-
-  function handlePreviousEpisode() {}
-
-  function handleNextEpisode() {}
-
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 md:gap-6 flex-1">
+        {showEpisodeNavigation && (
+          <VideoOSDPlaybackButton
+            handleClick={onPreviousEpisode}
+            Icon={StepBack}
+            disabled={!hasPreviousEpisode}
+          />
+        )}
+        <VideoOSDPlaybackButton handleClick={onSeekBack} Icon={RotateCcw} />
         <VideoOSDPlaybackButton
-          handleClick={handlePreviousEpisode}
-          Icon={StepBack}
-        />
-        <VideoOSDPlaybackButton handleClick={handleSeekBack} Icon={RotateCcw} />
-        <VideoOSDPlaybackButton
-          handleClick={handlePlayPause}
+          handleClick={onPlayPause}
           Icon={paused ? Play : Pause}
         />
-        <VideoOSDPlaybackButton
-          handleClick={handleSeekForward}
-          Icon={RotateCw}
-        />
-        <VideoOSDPlaybackButton
-          handleClick={handleNextEpisode}
-          Icon={StepForward}
-        />
+        <VideoOSDPlaybackButton handleClick={onSeekForward} Icon={RotateCw} />
+        {showEpisodeNavigation && (
+          <VideoOSDPlaybackButton
+            handleClick={onNextEpisode}
+            Icon={StepForward}
+            disabled={!hasNextEpisode}
+          />
+        )}
         <div className="flex items-center gap-2 ml-2 group/volume">
           <button
             onClick={manager.toggleMute}

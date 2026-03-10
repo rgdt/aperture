@@ -7,7 +7,7 @@ import { fetchSeasons } from "../../actions";
 import { useTrickplay } from "../../hooks/useTrickplay";
 import { useSkipSegments } from "../../hooks/useSkipSegments";
 import { VideoSplashLoader } from "./VideoSplashLoader";
-import { getNextEpisode } from "@/src/actions/media";
+import { getNextEpisode, getPreviousEpisode } from "@/src/actions/media";
 import _ from "lodash";
 import { VideoOSDHeader } from "./osd/VideoOSDHeader";
 import { VideoOSDPlayButton } from "./osd/VideoOSDPlayButton";
@@ -76,14 +76,18 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
   const [nextEpisodeData, setNextEpisodeData] = useState<BaseItemDto | null>(
     null,
   );
+  const [previousEpisodeData, setPreviousEpisodeData] =
+    useState<BaseItemDto | null>(null);
 
   const hasNextEpisode = !_.isEmpty(nextEpisodeData);
+  const hasPreviousEpisode = !_.isEmpty(previousEpisodeData);
 
   useEffect(() => {
-    const checkNextEpisode = async () => {
+    const checkEpisodes = async () => {
       try {
         if (currentItem?.Type !== "Episode") {
           setNextEpisodeData(null);
+          setPreviousEpisodeData(null);
           return;
         }
 
@@ -93,6 +97,7 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
 
         if (!seriesId || !parentIndexNumber) {
           setNextEpisodeData(null);
+          setPreviousEpisodeData(null);
           return;
         }
 
@@ -103,24 +108,26 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
         );
         if (!seasonData || !seasonData.Id) {
           setNextEpisodeData(null);
+          setPreviousEpisodeData(null);
           return;
         }
 
         const seasonId = seasonData.Id;
 
-        const nextEpisode = await getNextEpisode(seasonId, episodeNumber);
+        const [nextEpisode, previousEpisode] = await Promise.all([
+          getNextEpisode(seasonId, episodeNumber),
+          getPreviousEpisode(seasonId, episodeNumber),
+        ]);
 
-        if (nextEpisode) {
-          setNextEpisodeData(nextEpisode);
-        } else {
-          setNextEpisodeData(null);
-        }
+        setNextEpisodeData(nextEpisode || null);
+        setPreviousEpisodeData(previousEpisode || null);
       } catch (err) {
         setNextEpisodeData(null);
+        setPreviousEpisodeData(null);
       }
     };
 
-    checkNextEpisode();
+    checkEpisodes();
   }, [currentItem]);
 
   useEffect(() => {
@@ -301,6 +308,32 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
               volume={volume}
               isFullscreen={isFullscreen}
               toggleFullscreen={toggleFullscreen}
+              showEpisodeNavigation={currentItem?.Type === "Episode"}
+              hasNextEpisode={hasNextEpisode}
+              hasPreviousEpisode={hasPreviousEpisode}
+              onNextEpisode={() => {
+                if (nextEpisodeData) {
+                  manager.play(nextEpisodeData, { startPositionTicks: 0 });
+                }
+              }}
+              onPreviousEpisode={() => {
+                if (previousEpisodeData) {
+                  manager.play(previousEpisodeData, { startPositionTicks: 0 });
+                }
+              }}
+              onSeekBack={() =>
+                manager.seek(Math.max(0, currentTime - 10) * 10000000)
+              }
+              onSeekForward={() =>
+                manager.seek(Math.min(duration, currentTime + 10) * 10000000)
+              }
+              onPlayPause={() => {
+                if (paused) {
+                  manager.unpause();
+                } else {
+                  manager.pause();
+                }
+              }}
             />
           </div>
         </div>
