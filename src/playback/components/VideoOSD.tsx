@@ -148,6 +148,43 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [isScrubbing, setIsScrubbing] = useState(false);
 
+  const episodePlayOptions = useMemo(() => {
+    const {
+      audioStreamIndex,
+      subtitleStreamIndex,
+      currentMediaSource,
+      textTracks,
+    } = playbackState;
+    const options: any = { startPositionTicks: 0 };
+
+    if (audioStreamIndex !== undefined && currentMediaSource?.MediaStreams) {
+      const currentAudioTrack = currentMediaSource.MediaStreams.find(
+        (s: any) => s.Type === "Audio" && s.Index === audioStreamIndex,
+      );
+      if (currentAudioTrack?.Language) {
+        options.audioLanguage = currentAudioTrack.Language;
+      }
+    }
+
+    if (subtitleStreamIndex === -1) {
+      options.subtitleStreamIndex = -1;
+    } else if (subtitleStreamIndex !== undefined && textTracks) {
+      const currentSubtitleTrack = textTracks.find(
+        (t: any) => t.index === subtitleStreamIndex,
+      );
+      if (currentSubtitleTrack?.language) {
+        options.subtitleLanguage = currentSubtitleTrack.language;
+      }
+    }
+
+    return options;
+  }, [
+    playbackState.audioStreamIndex,
+    playbackState.subtitleStreamIndex,
+    playbackState.currentMediaSource,
+    playbackState.textTracks,
+  ]);
+
   // Helper to coordinate scrubbing state between Timeline and Parent
   const handleScrubStart = (val: number) => {
     setIsScrubbing(true);
@@ -271,6 +308,7 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
           hasNextEpisode={hasNextEpisode}
           nextEpisodeData={nextEpisodeData}
           handleMouseMove={handleMouseMove}
+          episodePlayOptions={episodePlayOptions}
         />
 
         <div
@@ -313,12 +351,12 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
               hasPreviousEpisode={hasPreviousEpisode}
               onNextEpisode={() => {
                 if (nextEpisodeData) {
-                  manager.play(nextEpisodeData, { startPositionTicks: 0 });
+                  manager.play(nextEpisodeData, episodePlayOptions);
                 }
               }}
               onPreviousEpisode={() => {
                 if (previousEpisodeData) {
-                  manager.play(previousEpisodeData, { startPositionTicks: 0 });
+                  manager.play(previousEpisodeData, episodePlayOptions);
                 }
               }}
               onSeekBack={() =>

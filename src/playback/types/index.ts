@@ -1,4 +1,7 @@
-import { BaseItemDto, MediaSourceInfo } from "@jellyfin/sdk/lib/generated-client/models";
+import {
+  BaseItemDto,
+  MediaSourceInfo,
+} from "@jellyfin/sdk/lib/generated-client/models";
 
 export interface PlayOptions {
   fullscreen?: boolean;
@@ -20,9 +23,11 @@ export interface PlayOptions {
     default?: boolean;
     index: number;
   }>;
+  audioLanguage?: string;
+  subtitleLanguage?: string;
 }
 
-export type PlayerType = 'Video' | 'Audio' | 'Youtube' | 'Phote';
+export type PlayerType = "Video" | "Audio" | "Youtube" | "Phote";
 
 export interface PlaybackState {
   paused: boolean;
@@ -36,13 +41,13 @@ export interface PlaybackState {
   isEnded: boolean;
   currentMediaSource: MediaSourceInfo | null;
   currentItem: BaseItemDto | null;
-  playMethod: 'DirectPlay' | 'DirectStream' | 'Transcode' | null;
+  playMethod: "DirectPlay" | "DirectStream" | "Transcode" | null;
   subtitleOffset: number;
   subtitleStreamIndex?: number;
   subtitleSize?: number;
   audioStreamIndex?: number;
   aspectRatio: string;
-  repeatMode: 'Off' | 'All' | 'One';
+  repeatMode: "Off" | "All" | "One";
   preferredQuality: string;
   isMiniPlayer?: boolean;
   isLoading?: boolean;

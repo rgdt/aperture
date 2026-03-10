@@ -212,6 +212,16 @@ export function usePlaybackManager(): PlaybackContextValue {
           const subs = await getSubtitleTracks(itemToPlay!.Id!, mediaSource.Id);
           let targetIndex = options.subtitleStreamIndex;
 
+          if (targetIndex === undefined && options.subtitleLanguage) {
+            const matchingSub = subs.find(
+              (s) => s.language === options.subtitleLanguage,
+            );
+            if (matchingSub && matchingSub.index !== undefined) {
+              targetIndex = matchingSub.index;
+              options.subtitleStreamIndex = targetIndex;
+            }
+          }
+
           if (targetIndex === undefined) {
             if (user && user.Configuration && user.Configuration.SubtitleMode) {
               let subtitlePreference: (typeof subs)[0] | undefined;
@@ -272,22 +282,33 @@ export function usePlaybackManager(): PlaybackContextValue {
       }
 
       if (options.audioStreamIndex === undefined && mediaSource?.MediaStreams) {
-        const audioStreams = mediaSource.MediaStreams.filter(
-          (s) => s.Type === "Audio",
-        );
+        if (options.audioLanguage) {
+          const matchingAudio = mediaSource.MediaStreams.find(
+            (s) => s.Type === "Audio" && s.Language === options.audioLanguage,
+          );
+          if (matchingAudio && matchingAudio.Index !== undefined) {
+            options.audioStreamIndex = matchingAudio.Index;
+          }
+        }
 
-        audioStreams.sort((a, b) => {
-          const defA = a.IsDefault || false;
-          const defB = b.IsDefault || false;
-          if (defA && !defB) return -1;
-          if (!defA && defB) return 1;
-          return (a.Language || "").localeCompare(b.Language || "");
-        });
+        if (options.audioStreamIndex === undefined) {
+          const audioStreams = mediaSource.MediaStreams.filter(
+            (s) => s.Type === "Audio",
+          );
 
-        if (audioStreams.length > 0) {
-          options.audioStreamIndex = audioStreams[0].Index;
-        } else {
-          options.audioStreamIndex = 1;
+          audioStreams.sort((a, b) => {
+            const defA = a.IsDefault || false;
+            const defB = b.IsDefault || false;
+            if (defA && !defB) return -1;
+            if (!defA && defB) return 1;
+            return (a.Language || "").localeCompare(b.Language || "");
+          });
+
+          if (audioStreams.length > 0) {
+            options.audioStreamIndex = audioStreams[0].Index;
+          } else {
+            options.audioStreamIndex = 1;
+          }
         }
       }
 
