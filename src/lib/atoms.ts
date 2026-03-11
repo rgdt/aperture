@@ -1,5 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models/base-item-dto";
+import { JellyfinItem } from "@/src/types/jellyfin";
 
 // Global loading state for dashboard
 export const dashboardLoadingAtom = atom(false);
@@ -44,3 +46,16 @@ export const themeSelectionAtom = atomWithStorage<ThemePresetSelection>(
   "aperture-dashboard-theme",
   defaultThemeSelection,
 );
+
+// Home page data, to persist navigation state within the session
+export const homeServerUrlAtom = atom<string | null>(null);
+export const homeUserAtom = atom<any | null>(null);
+export const homeResumeItemsAtom = atom<any[]>([]);
+export const homeNextupItemsAtom = atom<JellyfinItem[]>([]);
+export const homeLibrariesAtom = atom<
+  {
+    library: any;
+    items: BaseItemDto[];
+  }[]
+>([]);
+export const homeLastFetchTimeAtom = atom(0); // Last fetch time for homepage
