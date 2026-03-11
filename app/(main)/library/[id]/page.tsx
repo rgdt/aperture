@@ -33,7 +33,7 @@ export default function LibraryPage() {
         // Fetch both library details and initial items in parallel
         const [details, initialItems] = await Promise.all([
           getLibraryById(id),
-          fetchLibraryItems(id), // first fetch to get totalRecordCount
+          fetchLibraryItems({id}), // first fetch to get totalRecordCount
         ]);
 
         if (!details || !initialItems) {
@@ -44,7 +44,7 @@ export default function LibraryPage() {
 
         // Fetch all items using totalRecordCount
         const allItems = await fetchLibraryItems(
-          id,
+          {id, collectionType: details.CollectionType},
           initialItems.totalRecordCount,
         );
         setLibraryItems(allItems.items);
