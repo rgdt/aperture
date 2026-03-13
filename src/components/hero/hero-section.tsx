@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models/base-item-dto";
+import { useAtom } from "jotai";
+import { heroItemsAtom, heroLastVisitedTimeAtom } from "@/src/lib/atoms";
 import { fetchHeroItems } from "../../actions/media";
 import { HeroCarousel } from "./hero-carousel";
 import { Skeleton } from "../ui/skeleton";
@@ -10,22 +11,30 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ serverUrl }: HeroSectionProps) {
-  const [items, setItems] = useState<BaseItemDto[]>([]);
+  const [items, setItems] = useAtom(heroItemsAtom);
+  const [lastVisitedTime, setLastVisitedTime] = useAtom(heroLastVisitedTimeAtom);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!serverUrl) return;
+    const now = Date.now();
+    // Only refetch if 60 seconds have passed since the page was last visited
+    if (now - lastVisitedTime < 60000) {
+      setLastVisitedTime(Date.now());
+      setLoading(false);
+      return;
+    }
     async function loadHeroItems() {
-      if (!serverUrl) return;
       try {
         const heroItems = await fetchHeroItems();
         setItems(heroItems);
+        setLastVisitedTime(Date.now());
       } catch (error) {
         console.error("Error loading hero items", error);
       } finally {
         setLoading(false);
       }
     }
-
     loadHeroItems();
   }, [serverUrl]);
 

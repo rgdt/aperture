@@ -13,7 +13,7 @@ import { AuroraBackground } from "@/src/components/aurora-background";
 import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import {
-  homeLastFetchTimeAtom,
+  homeLastVisitedTimeAtom,
   homeServerUrlAtom,
   homeUserAtom,
   homeResumeItemsAtom,
@@ -32,15 +32,16 @@ export default function Home() {
   const [resumeItems, setResumeItems] = useAtom(homeResumeItemsAtom);
   const [nextupItems, setNextupItems] = useAtom(homeNextupItemsAtom);
   const [libraries, setLibraries] = useAtom(homeLibrariesAtom);
-  const [lastFetchTime, setLastFetchTime] = useAtom(homeLastFetchTimeAtom);
+  const [lastVisitedTime, setLastVisitedTime] = useAtom(homeLastVisitedTimeAtom);
 
   const [authError, setAuthError] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const now = Date.now();
-    // Only refetch if 60 seconds have passed since last fetch (in this session)
-    if (now - lastFetchTime < 60000) {
+    // Only refetch if 60 seconds have passed since the page was last visited
+    if (now - lastVisitedTime < 60000) {
+      setLastVisitedTime(Date.now());
       setLoading(false);
       return;
     }
@@ -80,7 +81,7 @@ export default function Home() {
         );
 
         setLibraries(libraryData);
-        setLastFetchTime(Date.now());
+        setLastVisitedTime(Date.now());
       } catch (error: any) {
         console.error("Failed to load data:", error);
 

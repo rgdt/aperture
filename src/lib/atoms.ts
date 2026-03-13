@@ -58,4 +58,6 @@ export const homeLibrariesAtom = atom<
     items: BaseItemDto[];
   }[]
 >([]);
-export const homeLastFetchTimeAtom = atom(0); // Last fetch time for homepage
+export const homeLastVisitedTimeAtom = atom(0); // Last visited time for homepage
+export const heroItemsAtom = atom<BaseItemDto[]>([]);
+export const heroLastVisitedTimeAtom = atom(0); // Last visited time for hero section
