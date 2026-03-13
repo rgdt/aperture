@@ -125,37 +125,37 @@ export default function ThemeSection() {
   return (
     <Collapsible open={themesOpen} onOpenChange={setThemesOpen}>
       <Card className="bg-card/80 backdrop-blur">
-        <CardHeader className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 font-poppins text-lg">
-            <Palette className="h-5 w-5" />
-            Themes
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-[11px]">
-              {THEME_VARIANTS.variants.length} variant
-              {THEME_VARIANTS.variants.length !== 1 ? "s" : ""}
-            </Badge>
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                aria-expanded={themesOpen}
-                className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-              >
-                {themesOpen ? "Hide" : "Show"}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform duration-200",
-                    themesOpen ? "rotate-180" : "rotate-0",
-                  )}
-                />
-              </button>
-            </CollapsibleTrigger>
-          </div>
-          <CardDescription className="w-full">
-            Explore the palette families that power the dashboard theming system
-            and apply any variant instantly.
-          </CardDescription>
-        </CardHeader>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="flex flex-wrap items-start justify-between gap-3 cursor-pointer">
+            <CardTitle className="flex items-center gap-2 font-poppins text-lg">
+              <Palette className="h-5 w-5" />
+              Themes
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-[11px]">
+                {THEME_VARIANTS.variants.length} variant
+                {THEME_VARIANTS.variants.length !== 1 ? "s" : ""}
+              </Badge>
+                <button
+                  type="button"
+                  aria-expanded={themesOpen}
+                  className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+                >
+                  {themesOpen ? "Hide" : "Show"}
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform duration-200",
+                      themesOpen ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                </button>
+            </div>
+            <CardDescription className="w-full">
+              Explore the palette families that power the dashboard theming system
+              and apply any variant instantly.
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-up data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-down">
           <CardContent className="space-y-4">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

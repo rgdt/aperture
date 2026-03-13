@@ -245,12 +245,12 @@ export default function ProfileSection() {
     <Fragment>
       <Collapsible open={profileOpen} onOpenChange={setProfileOpen}>
         <Card className="bg-card/80 backdrop-blur">
-          <CardHeader className="flex flex-wrap items-start justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 font-poppins text-lg">
-              <Settings2 className="h-5 w-5" />
-              Profile & Security
-            </CardTitle>
-            <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="flex flex-wrap items-start justify-between gap-3 cursor-pointer">
+              <CardTitle className="flex items-center gap-2 font-poppins text-lg">
+                <Settings2 className="h-5 w-5" />
+                Profile & Security     
+              </CardTitle>
               <button
                 type="button"
                 aria-expanded={profileOpen}
@@ -264,11 +264,11 @@ export default function ProfileSection() {
                   )}
                 />
               </button>
-            </CollapsibleTrigger>
-            <CardDescription className="w-full">
-              Manage how you sign in, link devices, and refresh your avatar.
-            </CardDescription>
-          </CardHeader>
+              <CardDescription className="w-full">
+                Manage how you sign in, link devices, and refresh your avatar.
+              </CardDescription>
+            </CardHeader>
+          </CollapsibleTrigger>
           <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-up data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-down">
             <CardContent className="space-y-6">
               <div className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-background/70 p-4 md:flex-row md:items-center md:justify-between">

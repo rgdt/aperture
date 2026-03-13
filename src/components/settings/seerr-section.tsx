@@ -150,43 +150,43 @@ export default function SeerrSection() {
   return (
     <Collapsible open={seerrOpen} onOpenChange={setSeerrOpen}>
       <Card className="bg-card/80 backdrop-blur">
-        <CardHeader className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 font-poppins text-lg">
-            <Eye className="h-5 w-5" />
-            Seerr Integration
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSeerrConnected && (
-              <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-medium text-green-500 ring-1 ring-inset ring-green-500/20">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                Connected
-              </div>
-            )}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-[11px]">
-              Beta
-            </Badge>
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                aria-expanded={seerrOpen}
-                className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-              >
-                {seerrOpen ? "Hide" : "Show"}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform duration-200",
-                    seerrOpen ? "rotate-180" : "rotate-0",
-                  )}
-                />
-              </button>
-            </CollapsibleTrigger>
-          </div>
-          <CardDescription className="w-full">
-            Configure your Overseerr or Jellyseerr instance to handle media
-            requests directly.
-          </CardDescription>
-        </CardHeader>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="flex flex-wrap items-start justify-between gap-3 cursor-pointer">
+            <CardTitle className="flex items-center gap-2 font-poppins text-lg">
+              <Eye className="h-5 w-5" />
+              Seerr Integration
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSeerrConnected && (
+                <div className="flex items-center gap-1.5 rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-medium text-green-500 ring-1 ring-inset ring-green-500/20">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Connected
+                </div>
+              )}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-[11px]">
+                Beta
+              </Badge>
+                <button
+                  type="button"
+                  aria-expanded={seerrOpen}
+                  className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+                >
+                  {seerrOpen ? "Hide" : "Show"}
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform duration-200",
+                      seerrOpen ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                </button>
+            </div>
+            <CardDescription className="w-full">
+              Configure your Overseerr or Jellyseerr instance to handle media
+              requests directly.
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-up data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-down">
           <CardContent className="space-y-6">
             {loading ? (

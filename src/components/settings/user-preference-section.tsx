@@ -47,30 +47,30 @@ export default function UserPreferenceSection() {
   return (
     <Collapsible open={preferencesOpen} onOpenChange={setPreferencesOpen}>
       <Card className="bg-card/80 backdrop-blur">
-        <CardHeader className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 font-poppins text-lg">
-            <Sliders className="h-5 w-5" />
-            User Preferences
-          </CardTitle>
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              aria-expanded={preferencesOpen}
-              className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-            >
-              {preferencesOpen ? "Hide" : "Show"}
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200",
-                  preferencesOpen ? "rotate-180" : "rotate-0",
-                )}
-              />
-            </button>
-          </CollapsibleTrigger>
-          <CardDescription className="w-full">
-            Customize your playback and interface experience.
-          </CardDescription>
-        </CardHeader>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="flex flex-wrap items-start justify-between gap-3 cursor-pointer">
+            <CardTitle className="flex items-center gap-2 font-poppins text-lg">
+              <Sliders className="h-5 w-5" />
+              User Preferences
+            </CardTitle>
+              <button
+                type="button"
+                aria-expanded={preferencesOpen}
+                className="inline-flex items-center gap-1 rounded-full border border-border/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+              >
+                {preferencesOpen ? "Hide" : "Show"}
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform duration-200",
+                    preferencesOpen ? "rotate-180" : "rotate-0",
+                  )}
+                />
+              </button>
+            <CardDescription className="w-full">
+              Customize your playback and interface experience.
+            </CardDescription>
+          </CardHeader>
+        </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-up data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-down">
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
