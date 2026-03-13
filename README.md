@@ -84,6 +84,13 @@ Special Thanks to **[@AyaanZaveri](https://github.com/AyaanZaveri)**, this is ba
 
 ## ⚙️ Instructions
 
+### 🐳 Environment Variables
+
+```env
+NEXT_PUBLIC_DEFAULT_SERVER_URL=your_server_url
+```
+
+
 ### 🐳 Run with Docker (Recommended)
 
 Docker is the recommended way to run the app. The Docker image is directly available on Docker Hub at `akhilmulpuri/aperture-web`.
