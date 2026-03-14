@@ -9,33 +9,42 @@ import { getAuthData, getUserLibraries } from "@/src/actions/utils";
 import { AuthErrorHandler } from "@/src/components/auth-error-handler";
 import { MediaSection } from "@/src/components/media-section";
 import { SearchBar } from "@/src/components/search-component";
-import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models/base-item-dto";
 import { AuroraBackground } from "@/src/components/aurora-background";
 import { useEffect, useState } from "react";
+import { useAtom } from "jotai";
+import {
+  homeLastVisitedTimeAtom,
+  homeServerUrlAtom,
+  homeUserAtom,
+  homeResumeItemsAtom,
+  homeNextupItemsAtom,
+  homeLibrariesAtom,
+} from "@/src/lib/atoms";
 import LoadingSpinner from "@/src/components/loading-spinner";
-
 import { HeroSection } from "@/src/components/hero/hero-section";
-import { JellyfinItem } from "@/src/types/jellyfin";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
 
-  const [serverUrl, setServerUrl] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
-  const [resumeItems, setResumeItems] = useState<any[]>([]);
-  const [nextupItems, setNextupItems] = useState<JellyfinItem[]>([]);
-  const [libraries, setLibraries] = useState<
-    {
-      library: any;
-      items: BaseItemDto[];
-    }[]
-  >([]);
+  const [serverUrl, setServerUrl] = useAtom(homeServerUrlAtom);
+  const [user, setUser] = useAtom(homeUserAtom);
+  const [resumeItems, setResumeItems] = useAtom(homeResumeItemsAtom);
+  const [nextupItems, setNextupItems] = useAtom(homeNextupItemsAtom);
+  const [libraries, setLibraries] = useAtom(homeLibrariesAtom);
+  const [lastVisitedTime, setLastVisitedTime] = useAtom(homeLastVisitedTimeAtom);
 
   const [authError, setAuthError] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const now = Date.now();
+    // Only refetch if 60 seconds have passed since the page was last visited
+    if (now - lastVisitedTime < 60000) {
+      setLastVisitedTime(Date.now());
+      setLoading(false);
+      return;
+    }
     async function fetchData() {
       try {
         const authData = await getAuthData();
@@ -72,6 +81,7 @@ export default function Home() {
         );
 
         setLibraries(libraryData);
+        setLastVisitedTime(Date.now());
       } catch (error: any) {
         console.error("Failed to load data:", error);
 
