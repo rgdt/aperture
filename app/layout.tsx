@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Poppins, Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import RootProvider from "@/src/providers/RootProvider";
 import Head from "next/head";
 import "./globals.css";
@@ -60,8 +58,6 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} ${poppins.variable} antialiased`}
       >
         <RootProvider>{children}</RootProvider>
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
