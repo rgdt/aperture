@@ -24,6 +24,7 @@ import {
 } from "@/src/reducer/dashboard-general-reducer";
 import { useSetAtom } from "jotai";
 import { dashboardLoadingAtom } from "@/src/lib/atoms";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function DashboardGeneralPage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
@@ -46,7 +47,7 @@ export default function DashboardGeneralPage() {
     [],
   );
   const [serverNameError, setServerNameError] = useState("");
-
+  const { handleAuthError } = useAuthError();
   useEffect(() => {
     let isMounted = true;
 
@@ -60,6 +61,7 @@ export default function DashboardGeneralPage() {
         dispatch({ type: "init", configuration: result.configuration ?? null });
       } catch (error) {
         console.error("Failed to load general settings:", error);
+        if (handleAuthError(error)) return;
       } finally {
         setDashboardLoading(false);
       }
@@ -107,6 +109,7 @@ export default function DashboardGeneralPage() {
     } catch (error) {
       console.error("Failed to save configuration:", error);
       toast.error("Failed to save settings.");
+      if (handleAuthError(error)) return;
     } finally {
       setIsSaving(false);
       setDashboardLoading(false);

@@ -6,6 +6,7 @@ import type {
 } from "@jellyfin/sdk/lib/generated-client/models";
 import { createJellyfinInstance } from "../lib/utils";
 import { getAuthData } from "./utils";
+import { isAuthError } from "./media";
 
 export interface DashboardGeneralData {
   configuration: ServerConfiguration | null;
@@ -14,55 +15,88 @@ export interface DashboardGeneralData {
 }
 
 export async function fetchDashboardGeneralData(): Promise<DashboardGeneralData> {
-  const { serverUrl, user } = await getAuthData();
-  const jellyfinInstance = createJellyfinInstance();
-  const api = jellyfinInstance.createApi(serverUrl);
+  try {
+    const { serverUrl, user } = await getAuthData();
+    const jellyfinInstance = createJellyfinInstance();
+    const api = jellyfinInstance.createApi(serverUrl);
 
-  if (!user.AccessToken) {
-    throw new Error("No access token found");
+    if (!user.AccessToken) {
+      throw new Error("No access token found");
+    }
+
+    api.accessToken = user.AccessToken;
+
+    const configurationApi = getConfigurationApi(api);
+    const localizationApi = getLocalizationApi(api);
+
+    const [configuration, localizationOptions] = await Promise.all([
+      configurationApi
+        .getConfiguration()
+        .then((response) => response.data)
+        .catch((err) => {
+          console.error(
+            "Failed to fetch system configuration for dashboard general.",
+          );
+          throw err;
+        }),
+      localizationApi
+        .getLocalizationOptions()
+        .then((response) => response.data ?? [])
+        .catch((err) => {
+          console.error("Failed to fetch localization options.");
+          throw err;
+        }),
+    ]);
+
+    return {
+      configuration,
+      localizationOptions,
+      quickConnectEnabled: Boolean(configuration?.QuickConnectAvailable),
+    };
+  } catch (error) {
+    console.error("Failed to fetch general settings:", error);
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
+    return {
+      configuration: null,
+      localizationOptions: [],
+      quickConnectEnabled: false,
+    };
   }
-
-  api.accessToken = user.AccessToken;
-
-  const configurationApi = getConfigurationApi(api);
-  const localizationApi = getLocalizationApi(api);
-
-  const [configuration, localizationOptions] = await Promise.all([
-    configurationApi.getConfiguration().then((response) => response.data).catch(() => {
-      console.error("Failed to fetch system configuration for dashboard general.");
-      return null;
-    }),
-    localizationApi
-      .getLocalizationOptions()
-      .then((response) => response.data ?? [])
-      .catch(() => {
-        console.error("Failed to fetch localization options.");
-        return [];
-      }),
-  ]);
-
-  return {
-    configuration,
-    localizationOptions,
-    quickConnectEnabled: Boolean(configuration?.QuickConnectAvailable),
-  };
 }
 
 export async function updateDashboardConfiguration(
-  configuration: ServerConfiguration
+  configuration: ServerConfiguration,
 ): Promise<void> {
-  const { serverUrl, user } = await getAuthData();
-  const jellyfinInstance = createJellyfinInstance();
-  const api = jellyfinInstance.createApi(serverUrl);
+  try {
+    const { serverUrl, user } = await getAuthData();
+    const jellyfinInstance = createJellyfinInstance();
+    const api = jellyfinInstance.createApi(serverUrl);
 
-  if (!user.AccessToken) {
-    throw new Error("No access token found");
+    if (!user.AccessToken) {
+      throw new Error("No access token found");
+    }
+
+    api.accessToken = user.AccessToken;
+    const configurationApi = getConfigurationApi(api);
+
+    await configurationApi.updateConfiguration({
+      serverConfiguration: configuration,
+    });
+  } catch (error) {
+    console.error("Failed to update configuration:", error);
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
+    throw error;
   }
-
-  api.accessToken = user.AccessToken;
-  const configurationApi = getConfigurationApi(api);
-
-  await configurationApi.updateConfiguration({
-    serverConfiguration: configuration,
-  });
 }
