@@ -25,6 +25,7 @@ import {
   fetchSystemConfiguration,
   updateSystemConfiguration,
 } from "@/src/actions";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function PlaybackStreamingPage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
@@ -32,6 +33,7 @@ export default function PlaybackStreamingPage() {
     resolver: zodResolver(streamingSettingsFormSchema) as any,
     defaultValues: defaultStreamingSettingsFormValues,
   });
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,6 +49,7 @@ export default function PlaybackStreamingPage() {
         });
       } catch (error) {
         console.error(error);
+        if (handleAuthError(error)) return;
         toast.error("Failed to load streaming settings");
       } finally {
         setDashboardLoading(false);
@@ -72,6 +75,7 @@ export default function PlaybackStreamingPage() {
       toast.success("Streaming settings saved");
     } catch (error) {
       console.error(error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to save streaming settings");
     } finally {
       setDashboardLoading(false);

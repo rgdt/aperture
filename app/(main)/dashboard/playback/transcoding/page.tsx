@@ -21,6 +21,7 @@ import { EncodingFormatOptionsCard } from "@/src/components/dashboard-playback/t
 import { ToneMappingCard } from "@/src/components/dashboard-playback/transcoding/tone-mapping-card";
 import { PathsCard } from "@/src/components/dashboard-playback/transcoding/paths-card";
 import { GeneralTranscodingCard } from "@/src/components/dashboard-playback/transcoding/general-transcoding-card";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function PlaybackTranscodingPage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
@@ -28,6 +29,7 @@ export default function PlaybackTranscodingPage() {
     resolver: zodResolver(transcodingSettingsFormSchema) as any,
     defaultValues: defaultTranscodingSettingsFormValues,
   });
+  const { handleAuthError } = useAuthError();
 
   const hardwareAccelerationType = useWatch({
     control: form.control,
@@ -93,6 +95,7 @@ export default function PlaybackTranscodingPage() {
         });
       } catch (error) {
         console.error(error);
+        if (handleAuthError(error)) return;
         toast.error("Failed to load transcoding settings");
       } finally {
         setDashboardLoading(false);
@@ -178,6 +181,7 @@ export default function PlaybackTranscodingPage() {
       toast.success("Transcoding settings saved");
     } catch (error) {
       console.error(error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to save transcoding settings");
     } finally {
       setDashboardLoading(false);

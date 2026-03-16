@@ -25,6 +25,7 @@ import {
   fetchSystemConfiguration,
   updateSystemConfiguration,
 } from "@/src/actions";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function PlaybackResumePage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
@@ -32,6 +33,7 @@ export default function PlaybackResumePage() {
     resolver: zodResolver(resumeSettingsFormSchema) as any,
     defaultValues: defaultResumeSettingsFormValues,
   });
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     const loadData = async () => {
@@ -48,6 +50,7 @@ export default function PlaybackResumePage() {
         });
       } catch (error) {
         console.error(error);
+        if (handleAuthError(error)) return;
         toast.error("Failed to load resume settings");
       } finally {
         setDashboardLoading(false);
@@ -74,6 +77,7 @@ export default function PlaybackResumePage() {
       toast.success("Resume settings saved");
     } catch (error) {
       console.error(error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to save resume settings");
     } finally {
       setDashboardLoading(false);

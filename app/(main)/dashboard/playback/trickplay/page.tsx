@@ -33,6 +33,7 @@ import {
   fetchSystemConfiguration,
   updateSystemConfiguration,
 } from "@/src/actions";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function PlaybackTrickplayPage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
@@ -40,6 +41,7 @@ export default function PlaybackTrickplayPage() {
     resolver: zodResolver(trickplaySettingsFormSchema) as any,
     defaultValues: defaultTrickplaySettingsFormValues,
   });
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     const loadData = async () => {
@@ -68,6 +70,7 @@ export default function PlaybackTrickplayPage() {
         });
       } catch (error) {
         console.error(error);
+        if (handleAuthError(error)) return;
         toast.error("Failed to load trickplay settings");
       } finally {
         setDashboardLoading(false);
@@ -108,6 +111,7 @@ export default function PlaybackTrickplayPage() {
       toast.success("Trickplay settings saved");
     } catch (error) {
       console.error(error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to save trickplay settings");
     } finally {
       setDashboardLoading(false);
