@@ -16,6 +16,7 @@ import { Suspense, useEffect, useState } from "react";
 import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CinematicSplashLoader } from "@/src/components/cinematic-splash-loader";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function Page() {
   return (
@@ -36,6 +37,7 @@ function Search() {
   const [series, setSeries] = useState<BaseItemDto[]>([]);
   const [episodes, setEpisodes] = useState<BaseItemDto[]>([]);
   const [people, setPeople] = useState<BaseItemDto[]>([]);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -53,9 +55,7 @@ function Search() {
         setPeople(results.filter((item) => item.Type === "Person"));
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       }
     }
 
