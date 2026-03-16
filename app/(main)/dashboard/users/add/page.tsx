@@ -29,12 +29,14 @@ import { dashboardLoadingAtom } from "@/src/lib/atoms";
 import { useSetAtom } from "jotai";
 import { useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function AddUserPage() {
   const router = useRouter();
   const [libraries, setLibraries] = useState<BaseItemDto[]>([]);
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const dashboardLoading = useAtomValue(dashboardLoadingAtom);
+  const { handleAuthError } = useAuthError();
 
   const form = useForm<AddUserFormValues>({
     resolver: zodResolver(addUserFormSchema) as any,
@@ -54,6 +56,10 @@ export default function AddUserPage() {
   useEffect(() => {
     fetchMediaFolders()
       .then(setLibraries)
+      .catch((err) => {
+        console.error("Failed to fetch media folders:", err);
+        if (handleAuthError(err)) return;
+      })
       .finally(() => setDashboardLoading(false));
   }, [setDashboardLoading]);
 
@@ -81,6 +87,7 @@ export default function AddUserPage() {
       router.push("/dashboard/users");
     } catch (error: any) {
       console.error("Failed to create user:", error);
+      if (handleAuthError(error)) return;
       const errorMessage =
         error?.response?.data || error.message || "Failed to create user";
       toast.error(

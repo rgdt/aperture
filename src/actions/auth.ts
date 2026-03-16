@@ -8,6 +8,7 @@ import { getDeviceId } from "../lib/device-id";
 import { StoreServerURL } from "./store/store-server-url";
 import { StoreAuthData } from "./store/store-auth-data";
 import { StoreSeerrData } from "./store/store-seerr-data";
+import { isAuthError } from "./media";
 
 // Type aliases for easier use
 type JellyfinUserWithToken = UserDto & { AccessToken?: string };
@@ -499,7 +500,13 @@ export async function changeUserPassword(
     });
   } catch (error: any) {
     console.error("Failed to update password:", error);
-
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
     const serverMessage =
       error?.response?.data?.Message ||
       error?.response?.data?.ErrorMessage ||

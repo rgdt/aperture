@@ -16,9 +16,11 @@ import {
 import { Input } from "../../ui/input";
 import { toast } from "sonner";
 import { passwordFormSchema, PasswordFormValues } from "./schema";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function PasswordTab({ user }: { user?: UserDto }) {
   const [isResetting, setIsResetting] = useState(false);
+  const { handleAuthError } = useAuthError();
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
@@ -42,6 +44,7 @@ export default function PasswordTab({ user }: { user?: UserDto }) {
       form.reset();
     } catch (error: any) {
       console.error("Failed to update password:", error);
+      if (handleAuthError(error)) return;
       const errorMessage =
         error?.response?.data || error.message || "Failed to update password";
       toast.error(
@@ -60,6 +63,7 @@ export default function PasswordTab({ user }: { user?: UserDto }) {
       toast.success("Password reset successfully");
     } catch (error: any) {
       console.error("Failed to reset password:", error);
+      if (handleAuthError(error)) return;
       const errorMessage =
         error?.response?.data || error.message || "Failed to reset password";
       toast.error(

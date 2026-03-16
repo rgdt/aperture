@@ -820,6 +820,13 @@ export async function createUser(
     return data;
   } catch (error: any) {
     console.error(`Failed to create user ${name}:`, error);
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
     throw error;
   }
 }
@@ -1101,6 +1108,13 @@ export async function fetchDevices(): Promise<DeviceInfoDto[]> {
     return data.Items || [];
   } catch (error) {
     console.error("Failed to fetch devices:", error);
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
     return [];
   }
 }

@@ -21,12 +21,14 @@ import { LibraryAccessSection } from "./library-access-section";
 import { DeviceAccessSection } from "./device-access-section";
 import { useAtomValue, useSetAtom } from "jotai";
 import { dashboardLoadingAtom } from "../../../lib/atoms";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function AccessTab({ user }: { user?: UserDto }) {
   const [libraries, setLibraries] = useState<BaseItemDto[]>([]);
   const [devices, setDevices] = useState<DeviceInfoDto[]>([]);
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const dashboardLoading = useAtomValue(dashboardLoadingAtom);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     setDashboardLoading(true);
@@ -34,6 +36,10 @@ export default function AccessTab({ user }: { user?: UserDto }) {
       .then(([libraries, devices]) => {
         setLibraries(libraries);
         setDevices(devices);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch media folders:", err);
+        if (handleAuthError(err)) return;
       })
       .finally(() => setDashboardLoading(false));
   }, [setDashboardLoading]);
@@ -79,6 +85,7 @@ export default function AccessTab({ user }: { user?: UserDto }) {
       toast.success("Access settings updated successfully");
     } catch (error) {
       console.error("Failed to update access settings:", error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to update access settings");
     } finally {
       setDashboardLoading(false);

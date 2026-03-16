@@ -17,16 +17,22 @@ import { UnratedItemsSection } from "./unrated-items-section";
 import { TagsSection } from "./tags-section";
 import { useAtomValue, useSetAtom } from "jotai";
 import { dashboardLoadingAtom } from "../../../lib/atoms";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function ParentalControlTab({ user }: { user?: UserDto }) {
   const [ratings, setRatings] = useState<ParentalRating[]>([]);
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const dashboardLoading = useAtomValue(dashboardLoadingAtom);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     setDashboardLoading(true);
     fetchParentalRatings()
       .then(setRatings)
+      .catch((err) => {
+        console.error("Failed to fetch parental ratings:", err);
+        if (handleAuthError(err)) return;
+      })
       .finally(() => setDashboardLoading(false));
   }, [setDashboardLoading]);
 
@@ -73,6 +79,7 @@ export default function ParentalControlTab({ user }: { user?: UserDto }) {
       toast.success("Parental controls updated successfully");
     } catch (error) {
       console.error("Failed to update parental controls:", error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to update parental controls");
     } finally {
       setDashboardLoading(false);
