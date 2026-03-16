@@ -11,6 +11,8 @@ import { PosterImage } from "@/src/components/media-page/poster-image";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/src/components/loading-spinner";
 import { useParams, useRouter } from "next/navigation";
+import ErrorWindow from "@/src/components/error-window";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function LiveChannel() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +22,7 @@ export default function LiveChannel() {
   const [backdropImage, setBackdropImage] = useState<string>("");
   const [logoImage, setLogoImage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -48,10 +51,7 @@ export default function LiveChannel() {
         setLogoImage(li);
       } catch (err: any) {
         console.error("Error loading TV channel:", err);
-
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -64,7 +64,7 @@ export default function LiveChannel() {
 
   if (tvChannel == null || id == null)
     return (
-      <div className="p-4">Error loading TV Channel. Please try again.</div>
+      <ErrorWindow message="Error loading TV Channel. Please try again." />
     );
 
   return (

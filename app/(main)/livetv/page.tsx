@@ -10,6 +10,8 @@ import {
 import { AuroraBackground } from "@/src/components/aurora-background";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/src/components/loading-spinner";
+import ErrorWindow from "@/src/components/error-window";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 const libraryName = "Live TV";
 
@@ -17,6 +19,7 @@ export default function LiveTVPage() {
   const [libraryItems, setLibraryItems] = useState<BaseItemDto[]>([]);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchLibraryData() {
@@ -34,10 +37,7 @@ export default function LiveTVPage() {
         setLibraryItems(libraryItems.items);
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          // redirect
-          window.location.href = "/login";
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -49,7 +49,7 @@ export default function LiveTVPage() {
   if (loading) return <LoadingSpinner />;
 
   if (serverUrl == null)
-    return <div className="p-4">Error loading Live TV. Please try again.</div>;
+    return <ErrorWindow message="Error loading Live TV. Please try again." />;
 
   return (
     <div className="relative px-4 py-3 max-w-full overflow-hidden">
