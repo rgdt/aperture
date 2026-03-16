@@ -105,7 +105,7 @@ function Backdrop() {
   } = themeMedia;
 
   return (
-    <div className="relative">
+    <div className="relative pl-2 pr-1">
       <div className="relative h-[50vh] md:h-[70vh] overflow-hidden md:rounded-xl md:mt-2.5">
         <div className="absolute inset-0 z-0">
           {themeVideoUrl && (
