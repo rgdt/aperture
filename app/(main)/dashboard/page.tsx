@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useSetAtom } from "jotai";
 import { dashboardLoadingAtom } from "@/src/lib/atoms";
 import { useRouter } from "next/navigation";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function DashboardPage() {
   const [scheduledTasks, setScheduledTasks] = useState<any[]>([]);
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const router = useRouter();
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -55,10 +57,7 @@ export default function DashboardPage() {
         setSystemInfo(sysInfo);
       } catch (error: any) {
         console.error(error);
-        if (error?.message?.includes("Authentication expired")) {
-          // use React Router navigate
-          router.push("/login");
-        }
+        if (handleAuthError(error)) return;
       } finally {
         setLoading(false);
         setDashboardLoading(false);

@@ -65,7 +65,7 @@ export function canBrowserDirectPlayHevc(): boolean {
   if (typeof document !== "undefined") {
     const video = document.createElement("video");
     const canPlay = HEVC_MEDIA_TYPES.some(
-      (type) => video.canPlayType(type) === "probably"
+      (type) => video.canPlayType(type) === "probably",
     );
     cachedHevcSupport = canPlay;
     return cachedHevcSupport;
@@ -101,7 +101,7 @@ export async function getImageUrl(
   quality?: number,
   tag?: string,
   maxWidth?: number,
-  maxHeight?: number
+  maxHeight?: number,
 ): Promise<string> {
   const { serverUrl } = await getAuthData();
 
@@ -133,7 +133,7 @@ export async function getImageUrl(
 }
 
 export async function getLiveTVStreamUrl(
-  item_id: string
+  item_id: string,
 ): Promise<string | undefined> {
   try {
     const { serverUrl, user } = await getAuthData();
@@ -170,7 +170,7 @@ export async function getUserImageUrl(itemId: string): Promise<string> {
 
 export async function uploadUserImage(
   userId: string,
-  file: File
+  file: File,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
 
@@ -212,7 +212,7 @@ export async function getStreamUrl(
   quality?: string,
   videoBitrate?: number,
   audioStreamIndex: number = 1,
-  subtitleStreamIndex?: number
+  subtitleStreamIndex?: number,
 ): Promise<string> {
   const { serverUrl, user } = await getAuthData();
   const supportsHevc = canBrowserDirectPlayHevc();
@@ -257,7 +257,7 @@ export async function getStreamUrl(
 export async function getDirectStreamUrl(
   itemId: string,
   mediaSource: MediaSourceInfo,
-  audioStreamIndex: number = 1
+  audioStreamIndex: number = 1,
 ): Promise<string> {
   const { serverUrl, user } = await getAuthData();
   if (!mediaSource.Id) {
@@ -285,7 +285,7 @@ export async function getDirectStreamUrl(
 }
 
 export async function getThemeSongStreamUrl(
-  itemId: string
+  itemId: string,
 ): Promise<string | null> {
   try {
     const { serverUrl, user } = await getAuthData();
@@ -321,7 +321,7 @@ export async function getThemeSongStreamUrl(
 }
 
 export async function getThemeVideoStreamUrl(
-  itemId: string
+  itemId: string,
 ): Promise<string | null> {
   try {
     const { serverUrl, user } = await getAuthData();
@@ -358,7 +358,7 @@ export async function getThemeVideoStreamUrl(
 
 export async function getSubtitleTracks(
   itemId: string,
-  mediaSourceId: string
+  mediaSourceId: string,
 ): Promise<
   Array<{
     kind: string;
@@ -386,13 +386,13 @@ export async function getSubtitleTracks(
     });
 
     const mediaSource = item.MediaSources?.find(
-      (ms) => ms.Id === mediaSourceId
+      (ms) => ms.Id === mediaSourceId,
     );
     const subtitleStreams =
       mediaSource?.MediaStreams?.filter(
         (stream) =>
           stream.Type === "Subtitle" &&
-          (stream.Codec || "").toLowerCase() !== "pgssub"
+          (stream.Codec || "").toLowerCase() !== "pgssub",
       ) || [];
     const subtitleTracks = subtitleStreams.map((stream) => {
       const src = `${serverUrl}/Videos/${itemId}/${mediaSourceId}/Subtitles/${stream.Index}/Stream.vtt?api_key=${user.AccessToken}`;
@@ -417,7 +417,7 @@ export async function getSubtitleTracks(
 
 export async function getAudioTracks(
   itemId: string,
-  mediaSourceId: string
+  mediaSourceId: string,
 ): Promise<
   Array<{
     id: number | undefined;
@@ -443,7 +443,7 @@ export async function getAudioTracks(
     });
 
     const mediaSource = item.MediaSources?.find(
-      (ms) => ms.Id === mediaSourceId
+      (ms) => ms.Id === mediaSourceId,
     );
 
     // 🔊 Get all audio streams
@@ -534,7 +534,7 @@ export async function getUserLibraries(): Promise<BaseItemDto[]> {
 }
 
 export async function getLibraryById(
-  libraryId: string
+  libraryId: string,
 ): Promise<BaseItemDto | null> {
   try {
     const { serverUrl, user } = await getAuthData();
@@ -578,7 +578,7 @@ export async function fetchRemoteImages(
   type: "Primary" | "Backdrop" | "Logo" | "Thumb" = "Primary",
   startIndex: number = 0,
   limit: number = 30,
-  includeAllLanguages: boolean = false
+  includeAllLanguages: boolean = false,
 ): Promise<RemoteImagesResponse> {
   const { serverUrl, user } = await getAuthData();
 
@@ -608,7 +608,7 @@ export async function downloadRemoteImage(
   itemId: string,
   imageType: "Primary" | "Backdrop" | "Logo" | "Thumb",
   imageUrl: string,
-  providerName: string
+  providerName: string,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
 
@@ -644,7 +644,7 @@ export interface CurrentImage {
 }
 
 export async function fetchCurrentImages(
-  itemId: string
+  itemId: string,
 ): Promise<CurrentImage[]> {
   const { serverUrl, user } = await getAuthData();
 
@@ -666,11 +666,11 @@ export async function fetchCurrentImages(
 export async function reorderBackdropImage(
   itemId: string,
   currentIndex: number,
-  newIndex: number
+  newIndex: number,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
   console.log(
-    `Reordering backdrop image for item ${itemId} from index ${currentIndex} to ${newIndex}`
+    `Reordering backdrop image for item ${itemId} from index ${currentIndex} to ${newIndex}`,
   );
 
   const url = `${serverUrl}/Items/${itemId}/Images/Backdrop/${currentIndex}/Index?newIndex=${newIndex}`;
@@ -693,7 +693,7 @@ export async function reorderBackdropImage(
 export async function deleteImage(
   itemId: string,
   imageType: string,
-  imageIndex?: number
+  imageIndex?: number,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
 
@@ -711,7 +711,7 @@ export async function deleteImage(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to delete ${imageType} image: ${response.statusText}`
+      `Failed to delete ${imageType} image: ${response.statusText}`,
     );
   }
 }
@@ -756,7 +756,7 @@ export async function getUserById(userId: string): Promise<UserDto | null> {
 
 export async function updateUser(
   userId: string,
-  userDto: UserDto
+  userDto: UserDto,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
   const jellyfinInstance = createJellyfinInstance();
@@ -779,7 +779,7 @@ export async function updateUser(
 
 export async function createUser(
   name: string,
-  password?: string
+  password?: string,
 ): Promise<UserDto> {
   const { serverUrl, user } = await getAuthData();
   const jellyfinInstance = createJellyfinInstance();
@@ -822,7 +822,7 @@ export async function deleteUser(userId: string): Promise<void> {
 
 export async function updateUserPolicy(
   userId: string,
-  userPolicy: UserPolicy
+  userPolicy: UserPolicy,
 ): Promise<void> {
   const { serverUrl, user } = await getAuthData();
   const jellyfinInstance = createJellyfinInstance();
@@ -845,7 +845,7 @@ export async function updateUserPolicy(
 
 export async function getUserWithPolicy(
   userId: string,
-  itemId: string
+  itemId: string,
 ): Promise<UserWithPolicy | null> {
   const { serverUrl, user } = await getAuthData();
 
@@ -898,13 +898,22 @@ export async function fetchScheduledTasks(): Promise<any[]> {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch scheduled tasks: ${response.statusText}`
+        `Failed to fetch scheduled tasks: ${response.statusText}`,
       );
     }
 
     return response.json();
   } catch (error) {
     console.error("Error fetching scheduled tasks:", error);
+    // If it's an authentication error, throw an error with a special flag
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
+
     return [];
   }
 }
@@ -932,6 +941,14 @@ export async function fetchJellyfinLogs(): Promise<LogFile[]> {
     return data || [];
   } catch (error) {
     console.error("Failed to fetch Jellyfin logs:", error);
+    // If it's an authentication error, throw an error with a special flag
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
     return [];
   }
 }
@@ -971,6 +988,14 @@ export async function fetchSystemInfo(): Promise<SystemInfo | null> {
     return data;
   } catch (error) {
     console.error("Failed to fetch system info:", error);
+    // If it's an authentication error, throw an error with a special flag
+    if (isAuthError(error)) {
+      const authError = new Error(
+        "Authentication expired. Please sign in again.",
+      );
+      (authError as any).isAuthError = true;
+      throw authError;
+    }
     return null;
   }
 }
