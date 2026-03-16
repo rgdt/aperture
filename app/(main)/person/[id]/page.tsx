@@ -18,6 +18,8 @@ import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 import LoadingSpinner from "@/src/components/loading-spinner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthError } from "@/src/hooks/use-auth-error";
+import ErrorWindow from "@/src/components/error-window";
 
 export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +30,7 @@ export default function PersonPage() {
   const [filmography, setFilmography] = useState<any[]>([]);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -49,9 +52,7 @@ export default function PersonPage() {
         setFilmography(films);
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -106,7 +107,7 @@ export default function PersonPage() {
 
   if (person == null || id == null || serverUrl == null)
     return (
-      <div className="p-4">Error loading Cast Person. Please try again.</div>
+      <ErrorWindow message="Error loading Cast Person. Please try again." />
     );
 
   return (
