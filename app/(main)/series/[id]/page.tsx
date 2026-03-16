@@ -18,6 +18,8 @@ import LoadingSpinner from "@/src/components/loading-spinner";
 import { MediaDetail } from "@/src/components/media-page/MediaDetail";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthError } from "@/src/hooks/use-auth-error";
+import ErrorWindow from "@/src/components/error-window";
 
 export default function Show() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ export default function Show() {
   const [similarItems, setSimilarItems] = useState<BaseItemDto[]>([]);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -59,9 +62,7 @@ export default function Show() {
         setSimilarItems(simItems);
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -114,7 +115,7 @@ export default function Show() {
 
   if (loading) return <LoadingSpinner />;
   if (!show || !id || !serverUrl)
-    return <div className="p-4">Error loading Series. Please try again.</div>;
+    return <ErrorWindow message="Error loading Series. Please try again." />;
 
   return (
     <MediaDetail.Root
