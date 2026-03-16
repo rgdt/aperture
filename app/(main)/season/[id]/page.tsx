@@ -22,6 +22,8 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "@/src/components/loading-spinner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthError } from "@/src/hooks/use-auth-error";
+import ErrorWindow from "@/src/components/error-window";
 
 export default function SeasonPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +36,7 @@ export default function SeasonPage() {
   const [similarItems, setSimilarItems] = useState<any[]>([]);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -64,9 +67,7 @@ export default function SeasonPage() {
         setSimilarItems(simItems);
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -78,7 +79,7 @@ export default function SeasonPage() {
   if (loading) return <LoadingSpinner />;
 
   if (season == null || id == null || serverUrl == null)
-    return <div className="p-4">Error loading Season. Please try again.</div>;
+    return <ErrorWindow message="Error loading Season. Please try again." />;
 
   return (
     <div className="min-h-screen overflow-hidden md:pr-1 pb-8">
