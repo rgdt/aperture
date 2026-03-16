@@ -38,6 +38,7 @@ import {
   CultureDto,
   CountryInfo,
 } from "@jellyfin/sdk/lib/generated-client/models";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 const resolutionOptions = [
   { label: "Match source", value: "MatchSource" },
@@ -54,6 +55,7 @@ export default function LibrariesMetadataPage() {
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const [cultures, setCultures] = useState<CultureDto[]>([]);
   const [countries, setCountries] = useState<CountryInfo[]>([]);
+  const { handleAuthError } = useAuthError();
 
   const form = useForm<MetadataFormValues>({
     resolver: zodResolver(metadataFormSchema) as any,
@@ -81,6 +83,7 @@ export default function LibrariesMetadataPage() {
         });
       } catch (error) {
         console.error(error);
+        if (handleAuthError(error)) return;
         toast.error("Failed to load metadata options");
       } finally {
         setDashboardLoading(false);
@@ -105,6 +108,7 @@ export default function LibrariesMetadataPage() {
       toast.success("Metadata settings saved");
     } catch (error) {
       console.error(error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to save metadata settings");
     } finally {
       setDashboardLoading(false);
