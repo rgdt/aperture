@@ -10,6 +10,8 @@ import LoadingSpinner from "@/src/components/loading-spinner";
 import { MediaDetail } from "@/src/components/media-page/MediaDetail";
 import { SeasonEpisodes } from "@/src/components/season-episodes";
 import { useParams, useRouter } from "next/navigation";
+import ErrorWindow from "@/src/components/error-window";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 export default function Episode() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +22,8 @@ export default function Episode() {
   const [logoImage, setLogoImage] = useState<string>("");
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const { handleAuthError } = useAuthError();
 
   useEffect(() => {
     async function fetchData() {
@@ -44,9 +48,7 @@ export default function Episode() {
         setServerUrl(server);
       } catch (err: any) {
         console.error(err);
-        if (err.message?.includes("Authentication expired")) {
-          router.push("/login");
-        }
+        if (handleAuthError(err)) return;
       } finally {
         setLoading(false);
       }
@@ -107,7 +109,7 @@ export default function Episode() {
 
   if (loading) return <LoadingSpinner />;
   if (!episode || !id || !serverUrl)
-    return <div className="p-4">Error loading Episode. Please try again.</div>;
+    return <ErrorWindow message="Error loading Episode. Please try again." />;
 
   return (
     <MediaDetail.Root
