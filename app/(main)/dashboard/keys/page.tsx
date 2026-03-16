@@ -30,6 +30,7 @@ import type { AuthenticationInfo } from "@jellyfin/sdk/lib/generated-client/mode
 import { toast } from "sonner";
 import { dashboardLoadingAtom } from "@/src/lib/atoms";
 import { useAtomValue, useSetAtom } from "jotai";
+import { useAuthError } from "@/src/hooks/use-auth-error";
 
 const PAGE_SIZE = 10;
 
@@ -53,6 +54,7 @@ export default function DashboardKeysPage() {
   const [revokingKey, setRevokingKey] = useState<string | null>(null);
   const setDashboardLoading = useSetAtom(dashboardLoadingAtom);
   const dashboardLoading = useAtomValue(dashboardLoadingAtom);
+  const { handleAuthError } = useAuthError();
 
   const loadKeys = useCallback(async () => {
     setDashboardLoading(true);
@@ -61,6 +63,7 @@ export default function DashboardKeysPage() {
       setKeys(normalizeApiKeys(result.Items ?? []));
     } catch (error) {
       console.error("Failed to load API keys:", error);
+      if (handleAuthError(error)) return;
     } finally {
       setDashboardLoading(false);
     }
@@ -137,6 +140,7 @@ export default function DashboardKeysPage() {
       toast.success("API key created.");
     } catch (error) {
       console.error("Failed to create API key:", error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to create API key.");
     } finally {
       setIsCreating(false);
@@ -154,6 +158,7 @@ export default function DashboardKeysPage() {
       toast.success("API key deleted.");
     } catch (error) {
       console.error("Failed to delete API key:", error);
+      if (handleAuthError(error)) return;
       toast.error("Failed to delete API key.");
     } finally {
       setRevokingKey(null);
