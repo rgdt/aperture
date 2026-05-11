@@ -14,6 +14,7 @@ import {
   getSubtitleTracks,
   markFavorite,
   unmarkFavorite,
+  canBrowserDirectPlayHevc,
 } from "../../actions";
 import { PlaybackState, Player, PlayOptions, PlayerType } from "../types";
 import { PlayQueueManager } from "../utils/playQueueManager";
@@ -359,8 +360,20 @@ export function usePlaybackManager(): PlaybackContextValue {
             (mediaSource.Container || "").toLowerCase(),
           );
 
+          const videoStream = mediaSource.MediaStreams?.find(
+            (s) => s.Type === "Video",
+          );
+          // Chrome/Brave cannot decode HEVC; only Safari/iOS can direct-play it.
+          // Without this check, MP4+HEVC files would be sent via Static=true and
+          // fail silently — the server has no DeviceProfile to reject them first.
+          const isVideoCodecCompatible =
+            !videoStream ||
+            (videoStream.Codec || "").toLowerCase() !== "hevc" ||
+            canBrowserDirectPlayHevc();
+
           const isDirectPlayCompatible =
             isContainerSupported &&
+            isVideoCodecCompatible &&
             (mediaSource.SupportsDirectPlay ||
               (mediaSource.Container === "mp4" &&
                 mediaSource.MediaStreams?.some(
