@@ -75,6 +75,7 @@ export {
   restartServer,
   shutdownServer,
   canBrowserDirectPlayHevc,
+  warmHevcCapabilityCache,
   fetchUsers,
   updateUser,
   updateUserPolicy,

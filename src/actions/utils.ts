@@ -24,55 +24,56 @@ import { v4 as uuidv4 } from "uuid";
 import { StoreAuthData } from "./store/store-auth-data";
 import { isAuthError } from "./media";
 
-const HEVC_MEDIA_TYPES = [
-  'video/mp4; codecs="hvc1.1.6.L93.B0"',
-  'video/mp4; codecs="hvc1.1.6.L120.B0"',
-  'video/mp4; codecs="hev1.1.6.L93.B0"',
-  'video/mp4; codecs="hev1.1.6.L120.B0"',
-];
+// HEVC Main Profile, Level 4.0 — representative of typical 1080p HEVC content.
+// hvc1 signals that parameter sets are in the bitstream (standard for MP4 direct play).
+const HEVC_CONTENT_TYPE = 'video/mp4; codecs="hvc1.1.6.L120.B0"';
 
 let cachedHevcSupport: boolean | null = null;
 
+/**
+ * Probes the browser's hardware HEVC decode capability via the MediaCapabilities
+ * API and caches the result. Call once at startup; canBrowserDirectPlayHevc()
+ * reads the cached value synchronously.
+ *
+ * powerEfficient === true confirms VideoToolbox / GPU decoding is in use.
+ * A software-only HEVC decoder would return supported=true but powerEfficient=false,
+ * which is not sufficient for direct play — we route those to HLS remux instead.
+ */
+export async function warmHevcCapabilityCache(): Promise<void> {
+  if (cachedHevcSupport !== null) return;
+
+  if (
+    typeof navigator === "undefined" ||
+    typeof navigator.mediaCapabilities?.decodingInfo !== "function"
+  ) {
+    cachedHevcSupport = false;
+    return;
+  }
+
+  try {
+    const result = await navigator.mediaCapabilities.decodingInfo({
+      type: "file",
+      video: {
+        contentType: HEVC_CONTENT_TYPE,
+        width: 1920,
+        height: 1080,
+        bitrate: 10_000_000,
+        framerate: 30,
+      },
+    });
+    cachedHevcSupport = result.supported === true && result.powerEfficient === true;
+  } catch {
+    cachedHevcSupport = false;
+  }
+}
+
+/**
+ * Returns true if the browser can hardware-decode HEVC (H.265).
+ * Always false until warmHevcCapabilityCache() has resolved — callers that
+ * need the definitive answer must await warmHevcCapabilityCache() first.
+ */
 export function canBrowserDirectPlayHevc(): boolean {
-  if (cachedHevcSupport !== null) return cachedHevcSupport;
-
-  if (typeof navigator === "undefined") {
-    cachedHevcSupport = false;
-    return cachedHevcSupport;
-  }
-
-  const ua = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isSafari =
-    /safari/.test(ua) && !/chrome|crios|android|fxios|edg/.test(ua);
-  const isAppleDevice = isIOS || (isSafari && /macintosh|mac os/.test(ua));
-
-  if (!isAppleDevice) {
-    cachedHevcSupport = false;
-    return cachedHevcSupport;
-  }
-
-  const mediaSourceSupported =
-    typeof MediaSource !== "undefined" &&
-    typeof MediaSource.isTypeSupported === "function" &&
-    HEVC_MEDIA_TYPES.some((type) => MediaSource.isTypeSupported(type));
-
-  if (mediaSourceSupported) {
-    cachedHevcSupport = true;
-    return cachedHevcSupport;
-  }
-
-  if (typeof document !== "undefined") {
-    const video = document.createElement("video");
-    const canPlay = HEVC_MEDIA_TYPES.some(
-      (type) => video.canPlayType(type) === "probably",
-    );
-    cachedHevcSupport = canPlay;
-    return cachedHevcSupport;
-  }
-
-  cachedHevcSupport = false;
-  return cachedHevcSupport;
+  return cachedHevcSupport ?? false;
 }
 
 export async function getAuthData(): Promise<{

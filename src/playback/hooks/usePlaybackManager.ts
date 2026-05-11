@@ -15,6 +15,7 @@ import {
   markFavorite,
   unmarkFavorite,
   canBrowserDirectPlayHevc,
+  warmHevcCapabilityCache,
 } from "../../actions";
 import { PlaybackState, Player, PlayOptions, PlayerType } from "../types";
 import { PlayQueueManager } from "../utils/playQueueManager";
@@ -732,6 +733,12 @@ export function usePlaybackManager(): PlaybackContextValue {
 
     const interval = setInterval(report, 10000); // 10s interval
     return () => clearInterval(interval);
+  }, []);
+
+  // Prime the HEVC hardware-decode cache before the user starts playback so
+  // canBrowserDirectPlayHevc() returns the real value at decision time.
+  useEffect(() => {
+    warmHevcCapabilityCache();
   }, []);
 
   const toggleMiniPlayer = useCallback(() => {
