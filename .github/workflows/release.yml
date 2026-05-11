@@ -1,3 +1,4 @@
+# SImplified realease pipeline
 name: Release
 
 on:
