@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import { isFullscreenAtom } from "../../lib/atoms";
 import { PlaybackContextValue } from "../hooks/usePlaybackManager";
-import { fetchSeasons } from "../../actions";
+import { fetchSeasons, getAuthData } from "../../actions";
 import { useTrickplay } from "../../hooks/useTrickplay";
 import { useSkipSegments } from "../../hooks/useSkipSegments";
 import { VideoSplashLoader } from "./VideoSplashLoader";
@@ -143,6 +143,20 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
     setLastActivity(Date.now());
     setIsHovering(true);
   };
+
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAuthData().then(({ serverUrl }) => setServerUrl(serverUrl));
+  }, []);
+
+  const chapterImageUrls = useMemo(() => {
+    if (!serverUrl || !currentItem?.Id) return [];
+    return chapters.map((chapter: any, index: number) => {
+      if (!chapter.ImageTag) return null;
+      return `${serverUrl}/Items/${currentItem.Id}/Images/Chapter/${index}?tag=${chapter.ImageTag}&fillWidth=320&quality=90`;
+    });
+  }, [serverUrl, currentItem?.Id, chapters]);
 
   const [scrubbingValue, setScrubbingValue] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
@@ -327,6 +341,7 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
               duration={duration}
               buffered={buffered}
               chapters={chapters}
+              chapterImageUrls={chapterImageUrls}
               isScrubbing={isScrubbing}
               scrubbingValue={scrubbingValue}
               activeChapter={activeChapter}
@@ -349,6 +364,9 @@ export const VideoOSD: React.FC<VideoOSDProps> = ({ manager }) => {
               showEpisodeNavigation={currentItem?.Type === "Episode"}
               hasNextEpisode={hasNextEpisode}
               hasPreviousEpisode={hasPreviousEpisode}
+              chapters={chapters}
+              activeChapter={activeChapter}
+              onSeekToChapter={(ticks) => manager.seek(ticks)}
               onNextEpisode={() => {
                 if (nextEpisodeData) {
                   manager.play(nextEpisodeData, episodePlayOptions);

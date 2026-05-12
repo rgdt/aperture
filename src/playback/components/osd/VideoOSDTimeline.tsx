@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { PlaybackContextValue } from "@/src/playback/hooks/usePlaybackManager";
 import { formatVideoTime } from "@/src/lib/utils";
 
@@ -9,6 +9,7 @@ interface VideoOSDTimelineProps {
   duration: number;
   buffered: TimeRanges | null;
   chapters: any[];
+  chapterImageUrls: (string | null)[];
   isScrubbing: boolean;
   scrubbingValue: number | null;
   activeChapter: any;
@@ -25,6 +26,7 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
   duration,
   buffered,
   chapters,
+  chapterImageUrls,
   isScrubbing,
   scrubbingValue,
   activeChapter,
@@ -58,6 +60,19 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
   const activeThumbTime = scrubbingValue !== null ? scrubbingValue : hoverTime;
   const currentThumbnail =
     activeThumbTime !== null ? renderThumbnail(activeThumbTime) : null;
+
+  const { hoverChapter, hoverChapterIndex } = useMemo(() => {
+    if (activeThumbTime === null || !chapters.length)
+      return { hoverChapter: null, hoverChapterIndex: -1 };
+    let idx = -1;
+    for (let i = 0; i < chapters.length; i++) {
+      if (chapters[i].StartPositionTicks / 10000000 <= activeThumbTime) idx = i;
+    }
+    return { hoverChapter: idx >= 0 ? chapters[idx] : null, hoverChapterIndex: idx };
+  }, [activeThumbTime, chapters]);
+
+  const hoverChapterImageUrl =
+    hoverChapterIndex >= 0 ? (chapterImageUrls[hoverChapterIndex] ?? null) : null;
 
   let thumbStyle: React.CSSProperties = {};
   if (currentThumbnail) {
@@ -136,15 +151,43 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
         ></div>
       )}
 
-      {currentThumbnail && activeThumbTime !== null && durationSeconds > 0 && (
+      {activeThumbTime !== null && durationSeconds > 0 && (currentThumbnail || hoverChapterImageUrl || hoverChapter) && (
         <div
-          className="absolute bottom-10 border-2 border-white rounded-md overflow-hidden shadow-lg bg-black z-30 pointer-events-none transition-opacity duration-200"
-          style={thumbStyle}
+          className="absolute bottom-10 border-2 border-white/80 rounded-md overflow-hidden shadow-lg bg-black z-30 pointer-events-none transition-opacity duration-200"
+          style={
+            currentThumbnail
+              ? thumbStyle
+              : hoverChapterImageUrl
+                ? (() => {
+                    const pos = (activeThumbTime / durationSeconds) * 100;
+                    return {
+                      width: 160,
+                      left: `clamp(80px, ${pos}%, calc(100% - 80px))`,
+                      transform: "translateX(-50%)",
+                    };
+                  })()
+                : (() => {
+                    const pos = (activeThumbTime / durationSeconds) * 100;
+                    return {
+                      left: `clamp(40px, ${pos}%, calc(100% - 40px))`,
+                      transform: "translateX(-50%)",
+                      whiteSpace: "nowrap",
+                    };
+                  })()
+          }
         >
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full px-2">
-            {activeChapter && (
+          {!currentThumbnail && hoverChapterImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={hoverChapterImageUrl}
+              alt={hoverChapter?.Name ?? "Chapter"}
+              className="w-40 object-cover block"
+            />
+          )}
+          <div className={`${currentThumbnail || hoverChapterImageUrl ? "absolute bottom-2" : "px-2 py-1"} left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full px-2`}>
+            {hoverChapter && (
               <span className="text-[10px] text-white/90 font-medium truncate max-w-full drop-shadow-md text-center">
-                {activeChapter.Name}
+                {hoverChapter.Name}
               </span>
             )}
             <div className="bg-black/70 px-1 rounded text-[10px] text-white font-mono">

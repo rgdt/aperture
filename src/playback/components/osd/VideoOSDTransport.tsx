@@ -11,11 +11,18 @@ import {
   PictureInPicture,
   StepBack,
   StepForward,
+  ChevronUp,
 } from "lucide-react";
 import _ from "lodash";
 import { PlaybackContextValue } from "@/src/playback/hooks/usePlaybackManager";
 import { formatVideoTime } from "@/src/lib/utils";
 import { VideoOSDPlaybackButton } from "./VideoOSDPlaybackButton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/src/components/ui/dropdown-menu";
 
 interface VideoOSDTransportProps {
   manager: PlaybackContextValue;
@@ -28,12 +35,15 @@ interface VideoOSDTransportProps {
   hasNextEpisode: boolean;
   hasPreviousEpisode: boolean;
   showEpisodeNavigation: boolean;
+  chapters: any[];
+  activeChapter: any | null;
   toggleFullscreen: () => void;
   onNextEpisode: () => void;
   onPreviousEpisode: () => void;
   onSeekBack: () => void;
   onSeekForward: () => void;
   onPlayPause: () => void;
+  onSeekToChapter: (ticks: number) => void;
 }
 
 export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
@@ -50,9 +60,12 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
   onNextEpisode,
   onPreviousEpisode,
   showEpisodeNavigation,
+  chapters,
+  activeChapter,
   onSeekBack,
   onSeekForward,
   onPlayPause,
+  onSeekToChapter,
 }) => {
   return (
     <div className="flex items-center justify-between gap-4">
@@ -111,6 +124,36 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-4">
+        {chapters.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="hidden md:flex items-center gap-1 text-xs font-light text-white/50 hover:text-white/90 transition-colors max-w-[140px] truncate focus:outline-none">
+                <span className="truncate">
+                  {activeChapter?.Name ?? chapters[0]?.Name ?? "Chapters"}
+                </span>
+                <ChevronUp className="w-3 h-3 shrink-0 opacity-50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="max-h-64 overflow-y-auto bg-black/80 backdrop-blur-md border-white/10"
+            >
+              {chapters.map((chapter: any, i: number) => (
+                <DropdownMenuItem
+                  key={i}
+                  onSelect={() => onSeekToChapter(chapter.StartPositionTicks)}
+                  className={`text-xs gap-3 ${chapter === activeChapter ? "text-white font-medium" : "text-white/70"}`}
+                >
+                  <span className="font-mono text-[10px] text-white/40 shrink-0">
+                    {formatVideoTime(chapter.StartPositionTicks, duration * 10000000)}
+                  </span>
+                  {chapter.Name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         <div className="text-sm font-medium text-white/60 tracking-wide font-mono">
           <span className="text-white">
             {
