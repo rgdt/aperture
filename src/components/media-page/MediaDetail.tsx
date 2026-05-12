@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, ReactNode, useMemo } from "react";
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, useRef } from "react";
 import { BaseItemDto, ChapterInfo } from "@jellyfin/sdk/lib/generated-client/models";
 import { VibrantAuroraBackground } from "../vibrant-aurora-background";
 import { useThemeMedia } from "../../hooks/useThemeMedia";
@@ -299,6 +299,14 @@ function Actions({
  */
 function Overview() {
   const { media } = useMediaDetail();
+  const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (el) setIsClamped(el.scrollHeight > el.clientHeight);
+  }, [media.Overview]);
 
   return (
     <>
@@ -312,9 +320,22 @@ function Overview() {
       )}
 
       {media.Overview && (
-        <span className="text-md leading-relaxed mb-6 max-w-4xl">
-          {media.Overview}
-        </span>
+        <div className="mb-6 max-w-4xl">
+          <span
+            ref={textRef}
+            className={`text-md leading-relaxed block ${!expanded ? "line-clamp-4" : ""}`}
+          >
+            {media.Overview}
+          </span>
+          {(isClamped || expanded) && (
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              className="mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {expanded ? "Show less" : "Show more"}
+            </button>
+          )}
+        </div>
       )}
     </>
   );
