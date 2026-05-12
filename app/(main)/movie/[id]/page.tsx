@@ -223,6 +223,7 @@ export default function Movie() {
         </MediaDetail.Content>
       </MediaDetail.Main>
 
+      <MediaDetail.Chapters />
       <MediaDetail.Cast />
       <MediaDetail.Similar items={similarItems} />
     </MediaDetail.Root>

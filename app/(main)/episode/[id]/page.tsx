@@ -152,6 +152,7 @@ export default function Episode() {
           </MediaDetail.Actions>
         </MediaDetail.Content>
       </MediaDetail.Main>
+      <MediaDetail.Chapters />
       {episode.SeasonId && episode.SeriesId && (
         <div className="relative z-10 pl-6 bg-background/95 dark:bg-background/50 backdrop-blur-xl rounded-2xl m-4 py-2 shadow-2xl">
           <SeasonEpisodes

@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, ReactNode, useMemo } from "react";
-import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
+import { BaseItemDto, ChapterInfo } from "@jellyfin/sdk/lib/generated-client/models";
 import { VibrantAuroraBackground } from "../vibrant-aurora-background";
 import { useThemeMedia } from "../../hooks/useThemeMedia";
 import { SearchBar } from "../search-component";
@@ -12,8 +12,11 @@ import { TextAnimate } from "../magicui/text-animate";
 import { TextScramble } from "../motion-primitives/text-scramble";
 import { CastScrollArea } from "../cast-scrollarea";
 import { MediaSection } from "../media-section";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Play, Clapperboard } from "lucide-react";
+import { formatVideoTime } from "../../lib/utils";
+import { usePlayback } from "../../hooks/usePlayback";
 
 interface MediaDetailContextType {
   media: BaseItemDto;
@@ -359,6 +362,84 @@ function Cast() {
 }
 
 /**
+ * Chapters Carousel
+ */
+function Chapters() {
+  const { media, serverUrl } = useMediaDetail();
+  const { play } = usePlayback();
+
+  const chapters = (media as any).Chapters as ChapterInfo[] | undefined;
+  if (!chapters || chapters.length === 0) return null;
+
+  return (
+    <div className="mt-8 px-6">
+      <h2 className="text-xl font-semibold mb-4">Chapters</h2>
+      <ScrollArea>
+        <div className="flex gap-3 pb-4">
+          {chapters.map((chapter, index) => {
+            const imageUrl = chapter.ImageTag
+              ? `${serverUrl}/Items/${media.Id}/Images/Chapter/${index}?tag=${chapter.ImageTag}&fillWidth=320&quality=80`
+              : null;
+
+            const handleClick = () => {
+              play({
+                id: media.Id!,
+                name: media.Name!,
+                type: media.Type as "Movie" | "Episode",
+                resumePositionTicks: chapter.StartPositionTicks,
+              });
+            };
+
+            return (
+              <div
+                key={index}
+                className="w-40 shrink-0 cursor-pointer group select-none"
+                onClick={handleClick}
+              >
+                <div className="relative w-full aspect-video rounded-md overflow-hidden border">
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt={chapter.Name ?? `Chapter ${index + 1}`}
+                      className="w-full h-full object-cover transition duration-200 group-hover:brightness-75"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <Clapperboard className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all duration-300">
+                    <div className="invisible group-hover:visible">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                        <Play className="h-3.5 w-3.5 text-white fill-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-mono leading-none">
+                    {formatVideoTime(
+                      chapter.StartPositionTicks ?? 0,
+                      media.RunTimeTicks ?? 1,
+                    )}
+                  </div>
+                </div>
+
+                <p className="mt-1.5 px-0.5 text-xs font-medium text-foreground line-clamp-1 group-hover:underline">
+                  {chapter.Name || `Chapter ${index + 1}`}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </div>
+  );
+}
+
+/**
  * Similar Items Section
  */
 interface SimilarProps {
@@ -394,6 +475,7 @@ export const MediaDetail = {
   Overview,
   Metadata,
   MetadataItem,
+  Chapters,
   Cast,
   Similar,
 };
