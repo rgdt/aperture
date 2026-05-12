@@ -305,7 +305,12 @@ function Overview() {
 
   useEffect(() => {
     const el = textRef.current;
-    if (el) setIsClamped(el.scrollHeight > el.clientHeight);
+    if (!el) return;
+    const check = () => setIsClamped(el.scrollHeight > el.clientHeight);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [media.Overview]);
 
   return (
@@ -323,7 +328,7 @@ function Overview() {
         <div className="mb-6 max-w-4xl">
           <span
             ref={textRef}
-            className={`text-md leading-relaxed block ${!expanded ? "line-clamp-4" : ""}`}
+            className={`text-md leading-relaxed ${!expanded ? "line-clamp-4" : ""}`}
           >
             {media.Overview}
           </span>
