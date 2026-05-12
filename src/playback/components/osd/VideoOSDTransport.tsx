@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Play,
   Pause,
@@ -17,12 +17,6 @@ import _ from "lodash";
 import { PlaybackContextValue } from "@/src/playback/hooks/usePlaybackManager";
 import { formatVideoTime } from "@/src/lib/utils";
 import { VideoOSDPlaybackButton } from "./VideoOSDPlaybackButton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
 
 interface VideoOSDTransportProps {
   manager: PlaybackContextValue;
@@ -67,6 +61,8 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
   onPlayPause,
   onSeekToChapter,
 }) => {
+  const [isChapterMenuOpen, setIsChapterMenuOpen] = useState(false);
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 md:gap-6 flex-1">
@@ -125,36 +121,46 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
       </div>
       <div className="flex items-center gap-4">
         {chapters.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="hidden md:flex items-center gap-1 text-xs font-light text-white/50 hover:text-white/90 transition-colors max-w-[140px] truncate focus:outline-none">
-                <span className="truncate">
-                  {activeChapter?.Name ?? chapters[0]?.Name ?? "Chapters"}
-                </span>
-                <ChevronUp className="w-3 h-3 shrink-0 opacity-50" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="max-h-64 overflow-y-auto bg-black/80 backdrop-blur-md border-white/10"
+          <div className="relative hidden md:block">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsChapterMenuOpen((o) => !o);
+              }}
+              className="flex items-center gap-1 text-xs font-light text-white/50 hover:text-white/90 transition-colors max-w-[140px] focus:outline-none"
             >
-              {chapters.map((chapter: any, i: number) => (
-                <DropdownMenuItem
-                  key={i}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSeekToChapter(chapter.StartPositionTicks);
-                  }}
-                  className={`text-xs gap-3 ${chapter === activeChapter ? "text-white font-medium" : "text-white/70"}`}
-                >
-                  <span className="font-mono text-[10px] text-white/40 shrink-0">
-                    {formatVideoTime(chapter.StartPositionTicks, duration * 10000000)}
-                  </span>
-                  {chapter.Name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <span className="truncate">
+                {activeChapter?.Name ?? chapters[0]?.Name ?? "Chapters"}
+              </span>
+              <ChevronUp
+                className={`w-3 h-3 shrink-0 opacity-50 transition-transform duration-200 ${isChapterMenuOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {isChapterMenuOpen && (
+              <div
+                className="absolute bottom-full right-0 mb-3 max-h-64 overflow-y-auto rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md"
+                style={{ background: "rgba(20, 20, 20, 0.85)" }}
+              >
+                {chapters.map((chapter: any, i: number) => (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSeekToChapter(chapter.StartPositionTicks);
+                      setIsChapterMenuOpen(false);
+                    }}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2 text-xs hover:bg-white/10 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${chapter === activeChapter ? "text-white font-medium" : "text-white/70"}`}
+                  >
+                    <span className="font-mono text-[10px] text-white/40 shrink-0">
+                      {formatVideoTime(chapter.StartPositionTicks, duration * 10000000)}
+                    </span>
+                    {chapter.Name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         <div className="text-sm font-medium text-white/60 tracking-wide font-mono">

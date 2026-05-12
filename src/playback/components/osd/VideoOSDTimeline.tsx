@@ -157,11 +157,11 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
 
       {activeThumbTime !== null && durationSeconds > 0 && (currentThumbnail || hoverChapterImageUrl || hoverChapter) && (
         <div
-          className="absolute bottom-10 rounded-xl overflow-hidden shadow-xl border border-white/15 z-30 pointer-events-none flex flex-col"
-          style={containerPositionStyle}
+          className="absolute bottom-10 rounded-2xl overflow-hidden shadow-2xl border border-white/10 z-30 pointer-events-none flex flex-col backdrop-blur-md"
+          style={{ ...containerPositionStyle, background: "rgba(20, 20, 20, 0.4)" }}
         >
           {/* Glassmorphism header: chapter name + timecode above the image */}
-          <div className="flex items-center justify-between gap-3 px-2.5 py-1.5 backdrop-blur-md bg-white/10 border-b border-white/10">
+          <div className="flex items-center justify-between gap-3 px-2.5 py-1.5 border-b border-white/10">
             <span className="text-[10px] text-white font-medium truncate max-w-[120px]">
               {hoverChapter?.Name ?? ""}
             </span>
