@@ -18,6 +18,7 @@ import { CastScrollArea } from "@/src/components/cast-scrollarea";
 import { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 import { BackdropImage } from "@/src/components/media-page/backdrop-image";
 import { PosterImage } from "@/src/components/media-page/poster-image";
+import { TextScramble } from "@/src/components/motion-primitives/text-scramble";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/src/components/loading-spinner";
 import { useParams, useRouter } from "next/navigation";
@@ -187,6 +188,14 @@ export default function SeasonPage() {
             </div>
 
             <div className="px-8 md:pl-8 md:pt-6 md:pr-16 flex flex-col justify-center md:items-start items-center">
+              {season.Taglines && season.Taglines.length > 0 && (
+                <TextScramble
+                  className="text-lg text-muted-foreground mb-4 max-w-4xl text-center md:text-left font-poppins drop-shadow-md"
+                  duration={1.2}
+                >
+                  {season.Taglines[0]}
+                </TextScramble>
+              )}
               {season.Overview && (
                 <p className="text-md leading-relaxed mb-6 max-w-4xl">
                   {season.Overview}
