@@ -12,6 +12,7 @@ import { getGenresApi } from "@jellyfin/sdk/lib/utils/api/genres-api";
 import { VirtualFolderInfo } from "@jellyfin/sdk/lib/generated-client/models/virtual-folder-info";
 import { LibraryOptionsResultDto } from "@jellyfin/sdk/lib/generated-client/models/library-options-result-dto";
 import { getTvShowsApi } from "@jellyfin/sdk/lib/utils/api/tv-shows-api";
+import { getPlaystateApi } from "@jellyfin/sdk/lib/utils/api/playstate-api";
 import { createJellyfinInstance } from "../lib/utils";
 import { JellyfinUserWithToken } from "../types/jellyfin";
 import { StoreAuthData } from "./store/store-auth-data";
@@ -999,6 +1000,40 @@ export async function unmarkFavorite(itemId: string): Promise<boolean> {
     return response.ok;
   } catch (error) {
     console.error("Failed to unmark favorite:", error);
+    return false;
+  }
+}
+
+export async function markPlayed(itemId: string): Promise<boolean> {
+  try {
+    const { serverUrl, user } = await getAuthData();
+    if (!user.AccessToken) throw new Error("No access token found");
+
+    const jellyfinInstance = createJellyfinInstance();
+    const api = jellyfinInstance.createApi(serverUrl);
+    api.accessToken = user.AccessToken;
+
+    await getPlaystateApi(api).markPlayedItem({ itemId, userId: user.Id });
+    return true;
+  } catch (error) {
+    console.error("Failed to mark item as played:", error);
+    return false;
+  }
+}
+
+export async function markUnplayed(itemId: string): Promise<boolean> {
+  try {
+    const { serverUrl, user } = await getAuthData();
+    if (!user.AccessToken) throw new Error("No access token found");
+
+    const jellyfinInstance = createJellyfinInstance();
+    const api = jellyfinInstance.createApi(serverUrl);
+    api.accessToken = user.AccessToken;
+
+    await getPlaystateApi(api).markUnplayedItem({ itemId, userId: user.Id });
+    return true;
+  } catch (error) {
+    console.error("Failed to mark item as unplayed:", error);
     return false;
   }
 }

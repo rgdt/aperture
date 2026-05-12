@@ -26,12 +26,16 @@ import {
   ChevronDown,
   Music,
   Check,
+  Circle,
+  CircleCheck,
 } from "lucide-react";
 import {
   getAuthData,
   getDownloadUrl,
   getUserWithPolicy,
   getUser,
+  markPlayed,
+  markUnplayed,
 } from "../actions";
 import { getMediaDetailsFromName, formatRuntime } from "../lib/utils";
 import { usePlayback } from "../hooks/usePlayback";
@@ -61,6 +65,7 @@ export function MediaActions({
     number | undefined
   >(undefined);
   const [userPolicy, setUserPolicy] = useState<UserPolicy | null>(null);
+  const [isPlayed, setIsPlayed] = useState(!!media?.UserData?.Played);
 
   // Determine if this is a resume or new play
   const hasProgress =
@@ -543,6 +548,29 @@ export function MediaActions({
               <MediaInfoDialog mediaSource={selectedVersion} />
             </DialogContent>
           </Dialog>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const prev = isPlayed;
+              setIsPlayed(!prev);
+              const ok = prev
+                ? await markUnplayed(media.Id!)
+                : await markPlayed(media.Id!);
+              if (!ok) setIsPlayed(prev);
+            }}
+            className="flex-1 sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
+          >
+            {isPlayed ? (
+              <CircleCheck className="h-4 w-4" />
+            ) : (
+              <Circle className="h-4 w-4" />
+            )}
+            <span className="ml-2 text-sm sm:hidden">
+              {isPlayed ? "Mark as unwatched" : "Mark as watched"}
+            </span>
+          </Button>
 
           {userPolicy?.IsAdministrator && (
             <ImageEditorDialog
