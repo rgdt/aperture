@@ -36,6 +36,10 @@ export const VideoSplashLoader: React.FC<VideoSplashLoaderProps> = ({
       getImageUrl(itemId, "Backdrop").then(setBackdropUrl);
       getImageUrl(itemId, "Logo").then(setLogoUrl);
     }
+    if(item?.Type === BaseItemKind.TvChannel && itemId) {
+      console.log("Hello")
+      getImageUrl(itemId).then(setLogoUrl);
+    }
   }, [item?.Id, item?.SeriesId, item?.Type]);
 
   return (
