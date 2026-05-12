@@ -141,7 +141,10 @@ export const VideoOSDTransport: React.FC<VideoOSDTransportProps> = ({
               {chapters.map((chapter: any, i: number) => (
                 <DropdownMenuItem
                   key={i}
-                  onSelect={() => onSeekToChapter(chapter.StartPositionTicks)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSeekToChapter(chapter.StartPositionTicks);
+                  }}
                   className={`text-xs gap-3 ${chapter === activeChapter ? "text-white font-medium" : "text-white/70"}`}
                 >
                   <span className="font-mono text-[10px] text-white/40 shrink-0">

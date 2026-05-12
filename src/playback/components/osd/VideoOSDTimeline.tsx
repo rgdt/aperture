@@ -74,28 +74,32 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
   const hoverChapterImageUrl =
     hoverChapterIndex >= 0 ? (chapterImageUrls[hoverChapterIndex] ?? null) : null;
 
-  let thumbStyle: React.CSSProperties = {};
-  if (currentThumbnail) {
-    thumbStyle = {
-      width: currentThumbnail.coords[2],
-      height: currentThumbnail.coords[3],
-      backgroundImage: `url(${currentThumbnail.src})`,
-      backgroundPosition: `-${currentThumbnail.coords[0]}px -${currentThumbnail.coords[1]}px`,
-    };
+  // Sprite style (size + background) — applied only to the trickplay div, not the container
+  const spriteStyle: React.CSSProperties = currentThumbnail
+    ? {
+        width: currentThumbnail.coords[2],
+        height: currentThumbnail.coords[3],
+        backgroundImage: `url(${currentThumbnail.src})`,
+        backgroundPosition: `-${currentThumbnail.coords[0]}px -${currentThumbnail.coords[1]}px`,
+        flexShrink: 0,
+      }
+    : {};
 
-    if (timelineWidth > 0 && durationSeconds > 0 && activeThumbTime !== null) {
-      const ratio = activeThumbTime / durationSeconds;
-      const centerPx = ratio * timelineWidth;
+  // Horizontal position of the tooltip container
+  let containerPositionStyle: React.CSSProperties = {};
+  if (durationSeconds > 0 && activeThumbTime !== null) {
+    if (currentThumbnail && timelineWidth > 0) {
       const halfWidth = currentThumbnail.coords[2] / 2;
-      const clampedCenter = Math.max(
-        halfWidth,
-        Math.min(timelineWidth - halfWidth, centerPx),
-      );
-      thumbStyle.left = `${clampedCenter}px`;
-      thumbStyle.transform = "translateX(-50%)";
-    } else if (durationSeconds > 0 && activeThumbTime !== null) {
-      thumbStyle.left = `${(activeThumbTime / durationSeconds) * 100}%`;
-      thumbStyle.transform = "translateX(-50%)";
+      const centerPx = (activeThumbTime / durationSeconds) * timelineWidth;
+      const clamped = Math.max(halfWidth, Math.min(timelineWidth - halfWidth, centerPx));
+      containerPositionStyle = { left: `${clamped}px`, transform: "translateX(-50%)" };
+    } else {
+      const halfWidth = hoverChapterImageUrl ? 80 : 50;
+      const pct = (activeThumbTime / durationSeconds) * 100;
+      containerPositionStyle = {
+        left: `clamp(${halfWidth}px, ${pct}%, calc(100% - ${halfWidth}px))`,
+        transform: "translateX(-50%)",
+      };
     }
   }
 
@@ -153,29 +157,23 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
 
       {activeThumbTime !== null && durationSeconds > 0 && (currentThumbnail || hoverChapterImageUrl || hoverChapter) && (
         <div
-          className="absolute bottom-10 border-2 border-white/80 rounded-md overflow-hidden shadow-lg bg-black z-30 pointer-events-none transition-opacity duration-200"
-          style={
-            currentThumbnail
-              ? thumbStyle
-              : hoverChapterImageUrl
-                ? (() => {
-                    const pos = (activeThumbTime / durationSeconds) * 100;
-                    return {
-                      width: 160,
-                      left: `clamp(80px, ${pos}%, calc(100% - 80px))`,
-                      transform: "translateX(-50%)",
-                    };
-                  })()
-                : (() => {
-                    const pos = (activeThumbTime / durationSeconds) * 100;
-                    return {
-                      left: `clamp(40px, ${pos}%, calc(100% - 40px))`,
-                      transform: "translateX(-50%)",
-                      whiteSpace: "nowrap",
-                    };
-                  })()
-          }
+          className="absolute bottom-10 rounded-xl overflow-hidden shadow-xl border border-white/15 z-30 pointer-events-none flex flex-col"
+          style={containerPositionStyle}
         >
+          {/* Glassmorphism header: chapter name + timecode above the image */}
+          <div className="flex items-center justify-between gap-3 px-2.5 py-1.5 backdrop-blur-md bg-white/10 border-b border-white/10">
+            <span className="text-[10px] text-white font-medium truncate max-w-[120px]">
+              {hoverChapter?.Name ?? ""}
+            </span>
+            <span className="text-[10px] text-white/60 font-mono shrink-0">
+              {formatVideoTime(activeThumbTime * 10000000, durationSeconds * 10000000).split(" / ")[0]}
+            </span>
+          </div>
+
+          {/* Image: trickplay sprite or chapter image */}
+          {currentThumbnail && (
+            <div style={spriteStyle} />
+          )}
           {!currentThumbnail && hoverChapterImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -184,21 +182,6 @@ export const VideoOSDTimeline: React.FC<VideoOSDTimelineProps> = ({
               className="w-40 object-cover block"
             />
           )}
-          <div className={`${currentThumbnail || hoverChapterImageUrl ? "absolute bottom-2" : "px-2 py-1"} left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full px-2`}>
-            {hoverChapter && (
-              <span className="text-[10px] text-white/90 font-medium truncate max-w-full drop-shadow-md text-center">
-                {hoverChapter.Name}
-              </span>
-            )}
-            <div className="bg-black/70 px-1 rounded text-[10px] text-white font-mono">
-              {
-                formatVideoTime(
-                  activeThumbTime * 10000000,
-                  durationSeconds * 10000000,
-                ).split(" / ")[0]
-              }
-            </div>
-          </div>
         </div>
       )}
 
