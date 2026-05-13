@@ -13,6 +13,13 @@ import {
 } from "@/src/components/ui/collapsible";
 import { cn } from "@/src/lib/utils";
 import { Switch } from "@/src/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { Sliders } from "lucide-react";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
@@ -27,6 +34,10 @@ export default function UserPreferenceSection() {
     setEnableThemeSongs,
     enableAuroraEffect,
     setEnableAuroraEffect,
+    episodeThumbnailSource,
+    setEpisodeThumbnailSource,
+    episodeBackdropSource,
+    setEpisodeBackdropSource,
   } = useSettings();
 
   const preferences = [
@@ -103,6 +114,59 @@ export default function UserPreferenceSection() {
                   />
                 </div>
               ))}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex items-start space-x-4 rounded-2xl border border-border/60 bg-background/70 p-4">
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    Episode thumbnail source
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Thumbnail shown for episodes on the home page.
+                  </p>
+                </div>
+                <Select
+                  value={episodeThumbnailSource}
+                  onValueChange={(v) =>
+                    setEpisodeThumbnailSource(v as "show" | "episode")
+                  }
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="show">Show</SelectItem>
+                    <SelectItem value="episode">Episode</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-start space-x-4 rounded-2xl border border-border/60 bg-background/70 p-4">
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    Episode detail backdrop
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Background image on the episode detail page.
+                  </p>
+                </div>
+                <Select
+                  value={episodeBackdropSource}
+                  onValueChange={(v) =>
+                    setEpisodeBackdropSource(v as "show" | "episode" | "none")
+                  }
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="show">Show</SelectItem>
+                    <SelectItem value="episode">Episode</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </CollapsibleContent>
