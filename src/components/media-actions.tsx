@@ -519,12 +519,12 @@ export function MediaActions({
             return null;
           })()}
 
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:items-center">
           <Button
             variant="outline"
             size="sm"
             onClick={download}
-            className="flex-1 sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
+            className="w-full sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
           >
             <Download className="h-4 w-4" />
             <span className="ml-2 text-sm sm:hidden">Download</span>
@@ -535,7 +535,7 @@ export function MediaActions({
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
+                className="w-full sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
               >
                 <Info className="h-4 w-4" />
                 <span className="ml-2 text-sm sm:hidden">Info</span>
@@ -560,7 +560,7 @@ export function MediaActions({
                 : await markPlayed(media.Id!);
               if (!ok) setIsPlayed(prev);
             }}
-            className="flex-1 sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
+            className="w-full sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
           >
             {isPlayed ? (
               <CircleCheck className="h-4 w-4" />
@@ -576,7 +576,7 @@ export function MediaActions({
             <ImageEditorDialog
               itemId={media.Id!}
               itemName={media.Name || "Unknown"}
-              triggerClassName="flex-1 sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
+              triggerClassName="w-full sm:flex-none sm:h-9 sm:w-9 sm:px-0 sm:gap-0"
               triggerLabel="Edit"
               triggerLabelClassName="ml-2 text-sm sm:hidden"
             />
