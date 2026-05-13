@@ -73,11 +73,19 @@ export const MediaCard = React.memo(function MediaCard({
     }
   }, [itemId, itemType]);
 
-  const imageType: "Thumb" | "Primary" = continueWatching ? "Thumb" : "Primary";
   const useShowThumb =
     itemType === "Episode" &&
     continueWatching &&
     episodeThumbnailSource === "show";
+
+  // Episodes store their own screenshot as Primary, not Thumb.
+  // Thumb is only valid when pulling from the parent show (ParentThumbItemId).
+  const effectiveImageType: "Thumb" | "Primary" =
+    continueWatching && !useShowThumb && itemType === "Episode"
+      ? "Primary"
+      : continueWatching
+        ? "Thumb"
+        : "Primary";
 
   const imageItemId = useMemo(() => {
     if (useShowThumb) {
@@ -91,14 +99,14 @@ export const MediaCard = React.memo(function MediaCard({
     const sizeParams = continueWatching
       ? "maxHeight=324&maxWidth=576"
       : "maxHeight=432&maxWidth=288";
-    return `${serverUrl}/Items/${imageItemId}/Images/${imageType}?${sizeParams}&quality=100`;
-  }, [continueWatching, imageItemId, imageType, serverUrl, item]);
+    return `${serverUrl}/Items/${imageItemId}/Images/${effectiveImageType}?${sizeParams}&quality=100`;
+  }, [continueWatching, imageItemId, effectiveImageType, serverUrl, item]);
 
   const imageTag = useShowThumb
     ? item.ParentThumbImageTag
-    : item.ImageTags?.[imageType];
+    : item.ImageTags?.[effectiveImageType];
   const blurHash = imageTag
-    ? (item.ImageBlurHashes?.[imageType]?.[imageTag] ?? "")
+    ? (item.ImageBlurHashes?.[effectiveImageType]?.[imageTag] ?? "")
     : "";
 
   useEffect(() => {

@@ -19,7 +19,6 @@ export default function Episode() {
   const router = useRouter();
   const [episode, setEpisode] = useState<BaseItemDto | null>(null);
   const [primaryImage, setPrimaryImage] = useState<string>("");
-  const [episodeThumbImage, setEpisodeThumbImage] = useState<string>("");
   const [showBackdropImage, setShowBackdropImage] = useState<string>("");
   const [logoImage, setLogoImage] = useState<string>("");
   const [serverUrl, setServerUrl] = useState<string | null>(null);
@@ -29,10 +28,10 @@ export default function Episode() {
   const { episodeBackdropSource } = useSettings();
 
   const backdropImage = useMemo(() => {
-    if (episodeBackdropSource === "episode") return episodeThumbImage;
+    if (episodeBackdropSource === "episode") return primaryImage;
     if (episodeBackdropSource === "show") return showBackdropImage;
     return "";
-  }, [episodeBackdropSource, episodeThumbImage, showBackdropImage]);
+  }, [episodeBackdropSource, primaryImage, showBackdropImage]);
 
   useEffect(() => {
     async function fetchData() {
@@ -43,16 +42,14 @@ export default function Episode() {
 
         setEpisode(episodeDetails);
 
-        const [pi, episodeThumb, showBackdrop, li, server] = await Promise.all([
+        const [pi, showBackdrop, li, server] = await Promise.all([
           getImageUrl(id, "Primary"),
-          getImageUrl(id, "Thumb"),
           getImageUrl(episodeDetails.SeriesId || id, "Backdrop"),
           getImageUrl(episodeDetails.SeriesId || id, "Logo"),
           getServerUrl(),
         ]);
 
         setPrimaryImage(pi);
-        setEpisodeThumbImage(episodeThumb || pi);
         setShowBackdropImage(showBackdrop);
         setLogoImage(li);
         setServerUrl(server);
