@@ -12,18 +12,27 @@ import { SeasonEpisodes } from "@/src/components/season-episodes";
 import { useParams, useRouter } from "next/navigation";
 import ErrorWindow from "@/src/components/error-window";
 import { useAuthError } from "@/src/hooks/use-auth-error";
+import { useSettings } from "@/src/contexts/settings-context";
 
 export default function Episode() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [episode, setEpisode] = useState<BaseItemDto | null>(null);
   const [primaryImage, setPrimaryImage] = useState<string>("");
-  const [backdropImage, setBackdropImage] = useState<string>("");
+  const [episodeThumbImage, setEpisodeThumbImage] = useState<string>("");
+  const [showBackdropImage, setShowBackdropImage] = useState<string>("");
   const [logoImage, setLogoImage] = useState<string>("");
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const { handleAuthError } = useAuthError();
+  const { episodeBackdropSource } = useSettings();
+
+  const backdropImage = useMemo(() => {
+    if (episodeBackdropSource === "episode") return episodeThumbImage;
+    if (episodeBackdropSource === "show") return showBackdropImage;
+    return "";
+  }, [episodeBackdropSource, episodeThumbImage, showBackdropImage]);
 
   useEffect(() => {
     async function fetchData() {
@@ -34,16 +43,17 @@ export default function Episode() {
 
         setEpisode(episodeDetails);
 
-        const [pi, bi, sbi, li, server] = await Promise.all([
+        const [pi, episodeThumb, showBackdrop, li, server] = await Promise.all([
           getImageUrl(id, "Primary"),
-          getImageUrl(id, "Backdrop"),
+          getImageUrl(id, "Thumb"),
           getImageUrl(episodeDetails.SeriesId || id, "Backdrop"),
           getImageUrl(episodeDetails.SeriesId || id, "Logo"),
           getServerUrl(),
         ]);
 
         setPrimaryImage(pi);
-        setBackdropImage(bi || sbi || pi);
+        setEpisodeThumbImage(episodeThumb || pi);
+        setShowBackdropImage(showBackdrop);
         setLogoImage(li);
         setServerUrl(server);
       } catch (err: any) {

@@ -18,6 +18,9 @@ export const BITRATE_OPTIONS: BitrateOption[] = [
 
 export type AIProvider = "gemini" | "ollama" | "groq" | "openrouter";
 
+export type EpisodeThumbnailSource = "show" | "episode";
+export type EpisodeBackdropSource = "show" | "episode" | "none";
+
 interface SettingsContextType {
   videoBitrate: string;
   setVideoBitrate: (bitrate: string) => void;
@@ -27,6 +30,10 @@ interface SettingsContextType {
   setEnableThemeSongs: (enable: boolean) => void;
   enableAuroraEffect: boolean;
   setEnableAuroraEffect: (enable: boolean) => void;
+  episodeThumbnailSource: EpisodeThumbnailSource;
+  setEpisodeThumbnailSource: (source: EpisodeThumbnailSource) => void;
+  episodeBackdropSource: EpisodeBackdropSource;
+  setEpisodeBackdropSource: (source: EpisodeBackdropSource) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -38,6 +45,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [enableThemeBackdrops, setEnableThemeBackdropsState] = useState(true);
   const [enableThemeSongs, setEnableThemeSongsState] = useState(true);
   const [enableAuroraEffect, setEnableAuroraEffectState] = useState(true);
+  const [episodeThumbnailSource, setEpisodeThumbnailSourceState] =
+    useState<EpisodeThumbnailSource>("show");
+  const [episodeBackdropSource, setEpisodeBackdropSourceState] =
+    useState<EpisodeBackdropSource>("show");
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -67,6 +78,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (savedAuroraEffect !== null) {
       setEnableAuroraEffectState(savedAuroraEffect === "true");
     }
+
+    const savedEpisodeThumbnailSource = localStorage.getItem(
+      "aperture-episode-thumbnail-source",
+    );
+    if (
+      savedEpisodeThumbnailSource === "show" ||
+      savedEpisodeThumbnailSource === "episode"
+    ) {
+      setEpisodeThumbnailSourceState(savedEpisodeThumbnailSource);
+    }
+
+    const savedEpisodeBackdropSource = localStorage.getItem(
+      "aperture-episode-backdrop-source",
+    );
+    if (
+      savedEpisodeBackdropSource === "show" ||
+      savedEpisodeBackdropSource === "episode" ||
+      savedEpisodeBackdropSource === "none"
+    ) {
+      setEpisodeBackdropSourceState(savedEpisodeBackdropSource);
+    }
   }, []);
 
   // Save to localStorage when states change
@@ -90,6 +122,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("aperture-enable-aurora-effect", String(enable));
   };
 
+  const setEpisodeThumbnailSource = (source: EpisodeThumbnailSource) => {
+    setEpisodeThumbnailSourceState(source);
+    localStorage.setItem("aperture-episode-thumbnail-source", source);
+  };
+
+  const setEpisodeBackdropSource = (source: EpisodeBackdropSource) => {
+    setEpisodeBackdropSourceState(source);
+    localStorage.setItem("aperture-episode-backdrop-source", source);
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -101,6 +143,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setEnableThemeSongs,
         enableAuroraEffect,
         setEnableAuroraEffect,
+        episodeThumbnailSource,
+        setEpisodeThumbnailSource,
+        episodeBackdropSource,
+        setEpisodeBackdropSource,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import type { BaseItemDto } from "@jellyfin/sdk/lib/generated-client/models";
 import { Play } from "lucide-react";
 import { decode } from "blurhash";
 import { usePlayback } from "../hooks/usePlayback";
+import { useSettings } from "../contexts/settings-context";
 import { OptimizedImage } from "./optimized-image";
 import Link from "next/link";
 
@@ -49,6 +50,7 @@ export const MediaCard = React.memo(function MediaCard({
   fullWidth = false,
 }: MediaCardProps) {
   const { play } = usePlayback();
+  const { episodeThumbnailSource } = useSettings();
 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [blurDataUrl, setBlurDataUrl] = useState<string | null>(null);
@@ -72,12 +74,17 @@ export const MediaCard = React.memo(function MediaCard({
   }, [itemId, itemType]);
 
   const imageType: "Thumb" | "Primary" = continueWatching ? "Thumb" : "Primary";
+  const useShowThumb =
+    itemType === "Episode" &&
+    continueWatching &&
+    episodeThumbnailSource === "show";
+
   const imageItemId = useMemo(() => {
-    if (itemType === "Episode" && continueWatching) {
+    if (useShowThumb) {
       return item.ParentThumbItemId || itemId;
     }
     return itemId;
-  }, [continueWatching, item.ParentThumbItemId, itemId, itemType]);
+  }, [useShowThumb, item.ParentThumbItemId, itemId]);
 
   const imageUrl = useMemo(() => {
     if (!serverUrl || !imageItemId) return "";
@@ -87,10 +94,9 @@ export const MediaCard = React.memo(function MediaCard({
     return `${serverUrl}/Items/${imageItemId}/Images/${imageType}?${sizeParams}&quality=100`;
   }, [continueWatching, imageItemId, imageType, serverUrl, item]);
 
-  const imageTag =
-    itemType === "Episode"
-      ? item.ParentThumbImageTag
-      : item.ImageTags?.[imageType];
+  const imageTag = useShowThumb
+    ? item.ParentThumbImageTag
+    : item.ImageTags?.[imageType];
   const blurHash = imageTag
     ? (item.ImageBlurHashes?.[imageType]?.[imageTag] ?? "")
     : "";
