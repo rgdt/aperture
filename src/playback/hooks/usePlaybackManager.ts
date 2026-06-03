@@ -16,6 +16,9 @@ import {
   unmarkFavorite,
   canBrowserDirectPlayHevc,
   warmHevcCapabilityCache,
+  canBrowserDirectPlayEac3,
+  canBrowserDirectPlayAc3,
+  warmAudioCapabilityCache,
 } from "../../actions";
 import { PlaybackState, Player, PlayOptions, PlayerType } from "../types";
 import { PlayQueueManager } from "../utils/playQueueManager";
@@ -356,6 +359,10 @@ export function usePlaybackManager(): PlaybackContextValue {
             }
           }
 
+          // Static direct play requires the browser to decode the raw container.
+          // Safari and Chromium both support MP4/M4V/MOV and WebM, but neither
+          // supports raw MKV static streams. MKV content reaches the HLS path where
+          // Jellyfin repackages it into fMP4 segments the browser can decode.
           const SUPPORTED_CONTAINERS = ["mp4", "m4v", "mov", "webm"];
           const isContainerSupported = SUPPORTED_CONTAINERS.includes(
             (mediaSource.Container || "").toLowerCase(),
@@ -364,9 +371,9 @@ export function usePlaybackManager(): PlaybackContextValue {
           const videoStream = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Video",
           );
-          // Chrome/Brave cannot decode HEVC; only Safari/iOS can direct-play it.
-          // Without this check, MP4+HEVC files would be sent via Static=true and
-          // fail silently — the server has no DeviceProfile to reject them first.
+          // Gate HEVC direct play on the browser's declared hardware decode
+          // capability (warmed at startup). Browsers without HEVC hardware support
+          // (e.g., Chrome on Linux without VAAPI) must fall through to HLS remux.
           const isVideoCodecCompatible =
             !videoStream ||
             (videoStream.Codec || "").toLowerCase() !== "hevc" ||
@@ -389,12 +396,19 @@ export function usePlaybackManager(): PlaybackContextValue {
           const selectedAudio = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Audio" && s.Index === options.audioStreamIndex,
           );
+          // Base set every browser supports. EAC3/AC3 are added when the browser
+          // reports canPlayType support (e.g. Safari on macOS/iOS). Chromium has no
+          // Dolby decoder and returns "" for those probes, so it stays on the base set
+          // and falls through to HLS where the server stream-copies HEVC + transcodes
+          // audio to AAC — the best achievable outcome for a Chromium client.
           const SUPPORTED_AUDIO_CODECS = [
             "aac",
             "mp3",
             "opus",
             "flac",
             "vorbis",
+            ...(canBrowserDirectPlayEac3() ? ["eac3"] : []),
+            ...(canBrowserDirectPlayAc3() ? ["ac3"] : []),
           ];
           const isAudioCompatible =
             selectedAudio &&
@@ -735,10 +749,11 @@ export function usePlaybackManager(): PlaybackContextValue {
     return () => clearInterval(interval);
   }, []);
 
-  // Prime the HEVC hardware-decode cache before the user starts playback so
-  // canBrowserDirectPlayHevc() returns the real value at decision time.
+  // Prime the HEVC hardware-decode cache and audio codec capability cache before
+  // the user starts playback so the synchronous getters return real values.
   useEffect(() => {
     warmHevcCapabilityCache();
+    warmAudioCapabilityCache();
   }, []);
 
   const toggleMiniPlayer = useCallback(() => {

@@ -30,6 +30,13 @@ const HEVC_CONTENT_TYPE = 'video/mp4; codecs="hvc1.1.6.L120.B0"';
 
 let cachedHevcSupport: boolean | null = null;
 
+// canPlayType probes: Safari returns "probably", Chromium returns "" (no Dolby license).
+const EAC3_CONTENT_TYPE = 'audio/mp4; codecs="ec-3"';
+const AC3_CONTENT_TYPE = 'audio/mp4; codecs="ac-3"';
+
+let cachedEac3Support: boolean | null = null;
+let cachedAc3Support: boolean | null = null;
+
 /**
  * Probes the browser's hardware HEVC decode capability via the MediaCapabilities
  * API and caches the result. Call once at startup; canBrowserDirectPlayHevc()
@@ -61,7 +68,11 @@ export async function warmHevcCapabilityCache(): Promise<void> {
         framerate: 30,
       },
     });
-    cachedHevcSupport = result.supported === true && result.powerEfficient === true;
+    // `supported` is the correct gate for playback capability. `powerEfficient`
+    // can be false on discrete-GPU desktops or when the API is conservative, even
+    // though hardware decoding is actually in use. Requiring powerEfficient === true
+    // would incorrectly block HEVC direct play on many capable devices.
+    cachedHevcSupport = result.supported === true;
   } catch {
     cachedHevcSupport = false;
   }
@@ -74,6 +85,23 @@ export async function warmHevcCapabilityCache(): Promise<void> {
  */
 export function canBrowserDirectPlayHevc(): boolean {
   return cachedHevcSupport ?? false;
+}
+
+export function warmAudioCapabilityCache(): void {
+  if (typeof document === "undefined") return;
+  if (cachedEac3Support === null) {
+    const el = document.createElement("video");
+    cachedEac3Support = el.canPlayType(EAC3_CONTENT_TYPE) !== "";
+    cachedAc3Support = el.canPlayType(AC3_CONTENT_TYPE) !== "";
+  }
+}
+
+export function canBrowserDirectPlayEac3(): boolean {
+  return cachedEac3Support ?? false;
+}
+
+export function canBrowserDirectPlayAc3(): boolean {
+  return cachedAc3Support ?? false;
 }
 
 export async function getAuthData(): Promise<{
@@ -221,10 +249,17 @@ export async function getStreamUrl(
   const requireAvc = (!supportsHevc).toString();
   const allowVideoStreamCopy = "true";
 
+  // Browsers that support EAC3/AC3 (e.g. Safari via VideoToolbox) get a priority
+  // list so Jellyfin copies the audio stream when it already matches. Chromium has
+  // no Dolby decoder, so it stays on "aac" and Jellyfin transcodes audio to AAC.
+  const preferredAudioCodecs = canBrowserDirectPlayEac3()
+    ? "eac3,ac3,aac"
+    : "aac";
+
   // Generate a unique PlaySessionId for each stream request
   const playSessionId = uuidv4();
 
-  let url = `${serverUrl}/Videos/${itemId}/master.m3u8?api_key=${user.AccessToken}&MediaSourceId=${mediaSourceId}&PlaySessionId=${playSessionId}&VideoCodec=${preferredVideoCodecs}&AudioCodec=aac&TranscodingProtocol=hls&RequireAvc=${requireAvc}&AllowVideoStreamCopy=${allowVideoStreamCopy}&AudioStreamIndex=${audioStreamIndex}&SegmentContainer=mp4&BreakOnNonKeyFrames=True&MinSegments=2&MaxFramerate=60`;
+  let url = `${serverUrl}/Videos/${itemId}/master.m3u8?api_key=${user.AccessToken}&MediaSourceId=${mediaSourceId}&PlaySessionId=${playSessionId}&VideoCodec=${preferredVideoCodecs}&AudioCodec=${preferredAudioCodecs}&TranscodingProtocol=hls&RequireAvc=${requireAvc}&AllowVideoStreamCopy=${allowVideoStreamCopy}&AudioStreamIndex=${audioStreamIndex}&SegmentContainer=mp4&BreakOnNonKeyFrames=True&MinSegments=2&MaxFramerate=60`;
 
   if (subtitleStreamIndex !== undefined) {
     url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;
