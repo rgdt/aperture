@@ -392,25 +392,18 @@ export function usePlaybackManager(): PlaybackContextValue {
           const selectedAudio = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Audio" && s.Index === options.audioStreamIndex,
           );
-          // EAC3 (Dolby Digital Plus), AC3 (Dolby Digital), DTS, DTS-HD MA, and
-          // TrueHD are all carried natively in MKV and MP4 containers and play
-          // directly in browsers that support them (Safari/macOS, some Chromium
-          // builds). Including them here allows direct play for HEVC+EAC3 files
-          // instead of falling through to a full server-side transcode.
+          // Chromium has no native decoder for EAC3, AC3, DTS, TrueHD, MLP, or
+          // raw PCM in a static MKV/MP4 stream — these all require a Dolby or DTS
+          // license that Chromium does not ship. Listing only the codecs Chromium
+          // can actually decode ensures MKV+HEVC+EAC3 falls through to the HLS
+          // path, where the server stream-copies HEVC and transcodes only the audio
+          // to AAC. That is the best achievable outcome for a Chromium client.
           const SUPPORTED_AUDIO_CODECS = [
             "aac",
             "mp3",
             "opus",
             "flac",
             "vorbis",
-            "eac3",
-            "ac3",
-            "dts",
-            "truehd",
-            "mlp",
-            "pcm",
-            "pcm_s16le",
-            "pcm_s24le",
           ];
           const isAudioCompatible =
             selectedAudio &&
