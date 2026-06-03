@@ -61,7 +61,11 @@ export async function warmHevcCapabilityCache(): Promise<void> {
         framerate: 30,
       },
     });
-    cachedHevcSupport = result.supported === true && result.powerEfficient === true;
+    // `supported` is the correct gate for playback capability. `powerEfficient`
+    // can be false on discrete-GPU desktops or when the API is conservative, even
+    // though hardware decoding is actually in use. Requiring powerEfficient === true
+    // would incorrectly block HEVC direct play on many capable devices.
+    cachedHevcSupport = result.supported === true;
   } catch {
     cachedHevcSupport = false;
   }
@@ -221,10 +225,15 @@ export async function getStreamUrl(
   const requireAvc = (!supportsHevc).toString();
   const allowVideoStreamCopy = "true";
 
+  // Allow EAC3, AC3, and DTS to pass through in MP4-segmented HLS (fMP4 supports
+  // these bitstreams natively). AAC is listed last as a transcode fallback so the
+  // server only re-encodes when the source codec is truly unsupported.
+  const preferredAudioCodecs = "eac3,ac3,dts,aac";
+
   // Generate a unique PlaySessionId for each stream request
   const playSessionId = uuidv4();
 
-  let url = `${serverUrl}/Videos/${itemId}/master.m3u8?api_key=${user.AccessToken}&MediaSourceId=${mediaSourceId}&PlaySessionId=${playSessionId}&VideoCodec=${preferredVideoCodecs}&AudioCodec=aac&TranscodingProtocol=hls&RequireAvc=${requireAvc}&AllowVideoStreamCopy=${allowVideoStreamCopy}&AudioStreamIndex=${audioStreamIndex}&SegmentContainer=mp4&BreakOnNonKeyFrames=True&MinSegments=2&MaxFramerate=60`;
+  let url = `${serverUrl}/Videos/${itemId}/master.m3u8?api_key=${user.AccessToken}&MediaSourceId=${mediaSourceId}&PlaySessionId=${playSessionId}&VideoCodec=${preferredVideoCodecs}&AudioCodec=${preferredAudioCodecs}&TranscodingProtocol=hls&RequireAvc=${requireAvc}&AllowVideoStreamCopy=${allowVideoStreamCopy}&AudioStreamIndex=${audioStreamIndex}&SegmentContainer=mp4&BreakOnNonKeyFrames=True&MinSegments=2&MaxFramerate=60`;
 
   if (subtitleStreamIndex !== undefined) {
     url += `&SubtitleStreamIndex=${subtitleStreamIndex}`;

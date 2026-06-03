@@ -356,7 +356,10 @@ export function usePlaybackManager(): PlaybackContextValue {
             }
           }
 
-          const SUPPORTED_CONTAINERS = ["mp4", "m4v", "mov", "webm"];
+          // MKV is the dominant container for HEVC content and is fully supported
+          // by Jellyfin's static (direct play) delivery path. MP4, M4V, MOV are
+          // standard MP4 family containers. WebM carries VP8/VP9/AV1.
+          const SUPPORTED_CONTAINERS = ["mp4", "m4v", "mov", "webm", "mkv", "matroska"];
           const isContainerSupported = SUPPORTED_CONTAINERS.includes(
             (mediaSource.Container || "").toLowerCase(),
           );
@@ -364,9 +367,9 @@ export function usePlaybackManager(): PlaybackContextValue {
           const videoStream = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Video",
           );
-          // Chrome/Brave cannot decode HEVC; only Safari/iOS can direct-play it.
-          // Without this check, MP4+HEVC files would be sent via Static=true and
-          // fail silently — the server has no DeviceProfile to reject them first.
+          // Gate HEVC direct play on the browser's declared hardware decode
+          // capability (warmed at startup). Browsers without HEVC hardware support
+          // (e.g., Chrome on Linux without VAAPI) must fall through to HLS remux.
           const isVideoCodecCompatible =
             !videoStream ||
             (videoStream.Codec || "").toLowerCase() !== "hevc" ||
@@ -389,12 +392,25 @@ export function usePlaybackManager(): PlaybackContextValue {
           const selectedAudio = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Audio" && s.Index === options.audioStreamIndex,
           );
+          // EAC3 (Dolby Digital Plus), AC3 (Dolby Digital), DTS, DTS-HD MA, and
+          // TrueHD are all carried natively in MKV and MP4 containers and play
+          // directly in browsers that support them (Safari/macOS, some Chromium
+          // builds). Including them here allows direct play for HEVC+EAC3 files
+          // instead of falling through to a full server-side transcode.
           const SUPPORTED_AUDIO_CODECS = [
             "aac",
             "mp3",
             "opus",
             "flac",
             "vorbis",
+            "eac3",
+            "ac3",
+            "dts",
+            "truehd",
+            "mlp",
+            "pcm",
+            "pcm_s16le",
+            "pcm_s24le",
           ];
           const isAudioCompatible =
             selectedAudio &&
