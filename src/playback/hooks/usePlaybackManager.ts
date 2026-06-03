@@ -359,10 +359,11 @@ export function usePlaybackManager(): PlaybackContextValue {
             }
           }
 
-          // MKV is the dominant container for HEVC content and is fully supported
-          // by Jellyfin's static (direct play) delivery path. MP4, M4V, MOV are
-          // standard MP4 family containers. WebM carries VP8/VP9/AV1.
-          const SUPPORTED_CONTAINERS = ["mp4", "m4v", "mov", "webm", "mkv", "matroska"];
+          // Static direct play requires the browser to decode the raw container.
+          // Safari and Chromium both support MP4/M4V/MOV and WebM, but neither
+          // supports raw MKV static streams. MKV content reaches the HLS path where
+          // Jellyfin repackages it into fMP4 segments the browser can decode.
+          const SUPPORTED_CONTAINERS = ["mp4", "m4v", "mov", "webm"];
           const isContainerSupported = SUPPORTED_CONTAINERS.includes(
             (mediaSource.Container || "").toLowerCase(),
           );

@@ -249,12 +249,12 @@ export async function getStreamUrl(
   const requireAvc = (!supportsHevc).toString();
   const allowVideoStreamCopy = "true";
 
-  // Chromium's MSE cannot decode EAC3, AC3, or DTS bitstreams inside fMP4 HLS
-  // segments — those formats require a Dolby/DTS license that Chromium does not
-  // ship. Sending only "aac" tells Jellyfin to always transcode the audio track
-  // to AAC for this client, which is the only audio codec Chromium reliably
-  // supports across all HLS fMP4 segments.
-  const preferredAudioCodecs = "aac";
+  // Browsers that support EAC3/AC3 (e.g. Safari via VideoToolbox) get a priority
+  // list so Jellyfin copies the audio stream when it already matches. Chromium has
+  // no Dolby decoder, so it stays on "aac" and Jellyfin transcodes audio to AAC.
+  const preferredAudioCodecs = canBrowserDirectPlayEac3()
+    ? "eac3,ac3,aac"
+    : "aac";
 
   // Generate a unique PlaySessionId for each stream request
   const playSessionId = uuidv4();
