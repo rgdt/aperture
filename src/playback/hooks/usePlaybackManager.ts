@@ -16,6 +16,9 @@ import {
   unmarkFavorite,
   canBrowserDirectPlayHevc,
   warmHevcCapabilityCache,
+  canBrowserDirectPlayEac3,
+  canBrowserDirectPlayAc3,
+  warmAudioCapabilityCache,
 } from "../../actions";
 import { PlaybackState, Player, PlayOptions, PlayerType } from "../types";
 import { PlayQueueManager } from "../utils/playQueueManager";
@@ -392,18 +395,19 @@ export function usePlaybackManager(): PlaybackContextValue {
           const selectedAudio = mediaSource.MediaStreams?.find(
             (s) => s.Type === "Audio" && s.Index === options.audioStreamIndex,
           );
-          // Chromium has no native decoder for EAC3, AC3, DTS, TrueHD, MLP, or
-          // raw PCM in a static MKV/MP4 stream — these all require a Dolby or DTS
-          // license that Chromium does not ship. Listing only the codecs Chromium
-          // can actually decode ensures MKV+HEVC+EAC3 falls through to the HLS
-          // path, where the server stream-copies HEVC and transcodes only the audio
-          // to AAC. That is the best achievable outcome for a Chromium client.
+          // Base set every browser supports. EAC3/AC3 are added when the browser
+          // reports canPlayType support (e.g. Safari on macOS/iOS). Chromium has no
+          // Dolby decoder and returns "" for those probes, so it stays on the base set
+          // and falls through to HLS where the server stream-copies HEVC + transcodes
+          // audio to AAC — the best achievable outcome for a Chromium client.
           const SUPPORTED_AUDIO_CODECS = [
             "aac",
             "mp3",
             "opus",
             "flac",
             "vorbis",
+            ...(canBrowserDirectPlayEac3() ? ["eac3"] : []),
+            ...(canBrowserDirectPlayAc3() ? ["ac3"] : []),
           ];
           const isAudioCompatible =
             selectedAudio &&
@@ -744,10 +748,11 @@ export function usePlaybackManager(): PlaybackContextValue {
     return () => clearInterval(interval);
   }, []);
 
-  // Prime the HEVC hardware-decode cache before the user starts playback so
-  // canBrowserDirectPlayHevc() returns the real value at decision time.
+  // Prime the HEVC hardware-decode cache and audio codec capability cache before
+  // the user starts playback so the synchronous getters return real values.
   useEffect(() => {
     warmHevcCapabilityCache();
+    warmAudioCapabilityCache();
   }, []);
 
   const toggleMiniPlayer = useCallback(() => {

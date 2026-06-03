@@ -30,6 +30,13 @@ const HEVC_CONTENT_TYPE = 'video/mp4; codecs="hvc1.1.6.L120.B0"';
 
 let cachedHevcSupport: boolean | null = null;
 
+// canPlayType probes: Safari returns "probably", Chromium returns "" (no Dolby license).
+const EAC3_CONTENT_TYPE = 'audio/mp4; codecs="ec-3"';
+const AC3_CONTENT_TYPE = 'audio/mp4; codecs="ac-3"';
+
+let cachedEac3Support: boolean | null = null;
+let cachedAc3Support: boolean | null = null;
+
 /**
  * Probes the browser's hardware HEVC decode capability via the MediaCapabilities
  * API and caches the result. Call once at startup; canBrowserDirectPlayHevc()
@@ -78,6 +85,23 @@ export async function warmHevcCapabilityCache(): Promise<void> {
  */
 export function canBrowserDirectPlayHevc(): boolean {
   return cachedHevcSupport ?? false;
+}
+
+export function warmAudioCapabilityCache(): void {
+  if (typeof document === "undefined") return;
+  if (cachedEac3Support === null) {
+    const el = document.createElement("video");
+    cachedEac3Support = el.canPlayType(EAC3_CONTENT_TYPE) !== "";
+    cachedAc3Support = el.canPlayType(AC3_CONTENT_TYPE) !== "";
+  }
+}
+
+export function canBrowserDirectPlayEac3(): boolean {
+  return cachedEac3Support ?? false;
+}
+
+export function canBrowserDirectPlayAc3(): boolean {
+  return cachedAc3Support ?? false;
 }
 
 export async function getAuthData(): Promise<{
